@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{DeckName}}</title>
+
+    <style>
+      /* BACK template for Take/Pass
+         Colors/typography/responsive rules come from shared CSS. */
+
+      /* Right column (same width as fronts’ sidebar) */
+      .rightcol {
+        flex: 0 0 220px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      /* Generic panel chrome */
+      .panel {
+        border: 1px solid var(--panel-border);
+        border-radius: 8px;
+        background: var(--panel-bg);
+        padding: 8px 10px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      /* EMG result table */
+      .result-table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 16px;
+        font-variant-numeric: tabular-nums;
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono",
+          monospace;
+      }
+      .result-table td:first-child {
+        text-align: left;
+        font-family: inherit;
+        position: relative;
+        padding-left: 1.5em; /* iPad portrait gets extra pad from shared CSS */
+      }
+      .result-table td.num {
+        text-align: right;
+        white-space: nowrap;
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono",
+          monospace;
+        font-variant-numeric: tabular-nums;
+      }
+      .result-table td.delta {
+        color: var(--muted);
+      }
+
+      /* Mark best (correct) row; severity tints come from shared .user-* classes */
+      #emg-table .correct {
+        font-weight: 700;
+      }
+
+      /* ✅/❌ markers for the user's picked row */
+      .result-table tr td:first-child::before {
+        content: "";
+        position: absolute;
+        left: 0.2em;
+        top: 50%;
+        transform: translateY(-50%);
+        line-height: 1;
+      }
+      .result-table tr.user-choice.user-correct td:first-child::before {
+        content: "✅";
+      }
+      .result-table tr.user-choice.user-wrong td:first-child::before {
+        content: "❌";
+      }
+    </style>
+  </head>
+
+  <body>
+    <h2 class="deck-title">{{DeckName}}</h2>
+
+    <div class="wrap">
+      <!-- LEFT: board image -->
+      <div class="imgwrap">{{BoardImage}}</div>
+
+      <!-- RIGHT: metrics + EMG table -->
+      <div class="rightcol">
+        <!-- Metrics (labels intentionally show Opp Equity on this card) -->
+        <div class="panel">
+          <div class="metrics-grid" id="metricsGrid">
+            <div class="metric">
+              <div class="label">Win</div>
+              <div class="value" data-key="WPercentage">{{WPercentage}}</div>
+            </div>
+            <div class="metric">
+              <div class="label">Win G</div>
+              <div class="value" data-key="WGPercentage">{{WGPercentage}}</div>
+            </div>
+            <div class="metric">
+              <div class="label">Win BG</div>
+              <div class="value" data-key="WBGPercentage">
+                {{WBGPercentage}}
+              </div>
+            </div>
+            <div class="metric">
+              <div class="label">Lose G</div>
+              <div class="value" data-key="OppGPercentage">
+                {{OppGPercentage}}
+              </div>
+            </div>
+            <div class="metric">
+              <div class="label">Lose BG</div>
+              <div class="value" data-key="OppBGPercentage">
+                {{OppBGPercentage}}
+              </div>
+            </div>
+            <div class="metric">
+              <div class="label">Opp Equity</div>
+              <div class="value" data-key="Equity">{{Equity}}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Take/Pass EMG (taker POV: Pass = −1.000) -->
+        <div class="panel">
+          <table
+            class="result-table"
+            id="emg-table"
+            aria-label="Take/Pass EMG outcomes"
+          >
+            <tr id="dt">
+              <td>Take</td>
+              <td class="num" id="dt-emg">{{DT EMG}}</td>
+              <td class="num delta" id="dt-delta"></td>
+            </tr>
+            <tr id="dp">
+              <td>Pass</td>
+              <td class="num" id="dp-emg">-1.000</td>
+              <td class="num delta" id="dp-delta"></td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="emg-footnote">{{Plies}}-ply analysis</div>
+      </div>
+    </div>
+
+    <hr />
+
+    <h3>Further exploration</h3>
+    <ul>
+      <li>
+        <a href="https://opengammon.com/position/{{XGID}}">
+          <strong>OpenGammon Position Analyzer</strong>
+        </a>
+        (An online interface to GNU Backgammon)
+      </li>
+      <li>
+        <div
+          class="copy-row"
+          style="display: flex; gap: 8px; align-items: center"
+        >
+          <span id="copy-visible">{{XGID}}</span>
+          <input
+            id="copy-hidden"
+            type="text"
+            value="{{XGID}}"
+            readonly
+            style="position: absolute; left: -9999px"
+          />
+          <button type="button" class="copy-btn" id="copyBtn">Copy</button>
+          <span
+            id="copyStatus"
+            style="margin-left: 8px; font-size: 12px; color: var(--muted)"
+          ></span>
+        </div>
+      </li>
+    </ul>
+
+    <hr />
+    <h3>Credits</h3>
+    <ul>
+      <li>Card generated by xgid2anki.</li>
+      <li>
+        Image generated with
+        <a href="https://nt.bglog.org/NT.html"><strong>bglog</strong></a
+        >.
+      </li>
+      <li>
+        Analysis provided by
+        <a href="https://www.gnu.org/software/gnubg/"
+          ><strong>GNU Backgammon</strong></a
+        >.
+      </li>
+    </ul>
+
+    <!-- Metrics formatting -->
+    <script>
+      (function () {
+        const grid = document.getElementById("metricsGrid");
+        if (!grid) return;
+
+        function parseNum(s) {
+          const t = String(s ?? "").trim();
+          if (!t) return null;
+          const pct = t.endsWith("%");
+          const n = parseFloat(t.replace("%", "").replace(",", "."));
+          if (!Number.isFinite(n)) return null;
+          return pct || n > 1.5 ? n / 100 : n; // accept "55%" or 0.55
+        }
+        const clamp01 = (x) => Math.max(0, Math.min(1, x));
+        const fmtProb = (p) => (p == null ? "—" : clamp01(p).toFixed(3));
+        const fmtEq = (e) =>
+          e == null ? "—" : (e >= 0 ? "+" : "") + e.toFixed(3);
+
+        grid.querySelectorAll(".value").forEach((el) => {
+          const key = el.getAttribute("data-key");
+          const val = parseNum(el.textContent);
+          el.textContent = key === "Equity" ? fmtEq(val) : fmtProb(val);
+        });
+      })();
+    </script>
+
+    <!-- Take/Pass EMG logic + user feedback -->
+    <script>
+      (function () {
+        const toNum = (s) => {
+          const n = parseFloat(
+            String(s ?? "")
+              .trim()
+              .replace(",", "."),
+          );
+          return Number.isFinite(n) ? n : null;
+        };
+
+        const dt = toNum(`{{DT EMG}}`);
+        const dp = -1.0; // Pass EMG (taker’s POV)
+
+        // Best action: Take if dt > -1, else Pass
+        const answer = dt != null && dt > -1 ? "Take" : "Pass";
+        const bestEmg = answer === "Take" ? dt : dp;
+
+        const fmtDelta = (x) =>
+          x == null || !Number.isFinite(x)
+            ? ""
+            : `(${x >= 0 ? "+" : ""}${x.toFixed(3)})`;
+
+        // Fill deltas vs. best
+        const dtCell = document.getElementById("dt-delta");
+        const dpCell = document.getElementById("dp-delta");
+        if (dtCell)
+          dtCell.textContent = fmtDelta(dt != null ? dt - bestEmg : null);
+        if (dpCell) dpCell.textContent = fmtDelta(dp - bestEmg);
+
+        // Mark best row
+        const table = document.getElementById("emg-table");
+        const rows = table ? table.querySelectorAll("tr") : [];
+        rows.forEach((row) => {
+          const label = row.cells?.[0]?.textContent?.trim();
+          if (label === answer) row.classList.add("correct");
+        });
+
+        // User feedback (from front)
+        let pickedText = "",
+          pickedIdx = "";
+        try {
+          pickedText = (
+            sessionStorage.getItem("ankibg_selected_text") || ""
+          ).trim();
+          pickedIdx = (
+            sessionStorage.getItem("ankibg_selected_idx") || ""
+          ).trim();
+        } catch (_) {}
+
+        if (!pickedText && pickedIdx) {
+          pickedText =
+            pickedIdx === "1" ? "Take" : pickedIdx === "2" ? "Pass" : "";
+        }
+
+        if (pickedText) {
+          const pickedRow = Array.from(rows).find(
+            (r) => r.cells?.[0]?.textContent?.trim() === pickedText,
+          );
+          if (pickedRow) {
+            pickedRow.classList.add("user-choice");
+            if (pickedText === answer) {
+              pickedRow.classList.add("user-correct");
+            } else if (bestEmg != null) {
+              pickedRow.classList.add("user-wrong");
+              const pickedEmg =
+                pickedText === "Take" ? dt : pickedText === "Pass" ? dp : null;
+
+              if (pickedEmg != null) {
+                const deltaAbs = Math.abs(pickedEmg - bestEmg);
+                if (deltaAbs > 0.08) pickedRow.classList.add("sev-red");
+                else if (deltaAbs >= 0.02)
+                  pickedRow.classList.add("sev-yellow");
+                else pickedRow.classList.add("sev-green");
+              }
+            }
+          }
+        }
+      })();
+    </script>
+
+    <!-- XGID copy + OpenGammon URL fix -->
+    <script>
+      (function () {
+        const btn = document.getElementById("copyBtn");
+        const input = document.getElementById("copy-hidden");
+        const note = document.getElementById("copyStatus");
+
+        function feedback(msg) {
+          if (!note) return;
+          const prev = note.textContent;
+          note.textContent = msg;
+          setTimeout(() => (note.textContent = prev), 1200);
+        }
+
+        if (btn) {
+          btn.addEventListener("click", async () => {
+            if (!input) return;
+            input.focus();
+            input.select();
+            let ok = false;
+            try {
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(input.value);
+                ok = true;
+              } else {
+                ok = document.execCommand("copy");
+              }
+            } catch (_) {}
+            feedback(ok ? "Copied!" : "Press Ctrl/Cmd+C");
+          });
+        }
+
+        // Replace '=' with ':' in XGID for OpenGammon
+        const xgid = "{{XGID}}".trim();
+        const fixed = xgid.replace(/=/g, ":");
+        const link = document.querySelector(
+          'a[href*="opengammon.com/position"]',
+        );
+        if (link) link.href = `https://opengammon.com/position/${fixed}`;
+      })();
+    </script>
+  </body>
+</html>

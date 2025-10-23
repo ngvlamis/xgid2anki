@@ -1,0 +1,481 @@
+/* ===========================
+   Shared CSS for all 6 templates
+   =========================== */
+
+/* 1) Theme tokens */
+:root {
+  --bg: #ffffff;
+  --fg: #121212;
+  --muted: #555555;
+  --border: #dddddd;
+
+  --panel-bg: #fafafa;
+  --panel-border: #dddddd;
+
+  --accent: #0062ff;
+  --accent-soft: rgba(0, 98, 255, 0.1);
+
+  --ok: #1f9d55;
+  --bad: #d64545;
+
+  --sev-green: rgba(31, 157, 85, 0.12);
+  --sev-yellow: rgba(240, 160, 0, 0.14);
+  --sev-red: rgba(214, 69, 69, 0.14);
+
+  --link: #0b66ff;
+  --link-visited: #6b5cff;
+
+  --hr: #e8e8e8;
+  --code-bg: #f4f6f8;
+
+  /* Fallbacks (script overwrites on card render) */
+  --titleH: 80px; /* deck title + small buffer */
+  --anki-chrome: 160px; /* toolbar/footer budget (portrait default) */
+}
+
+body.nightMode {
+  --bg: #0f1115;
+  --fg: #e8e8e8;
+  --muted: #b3b9c5;
+  --border: #2a2f3a;
+
+  --panel-bg: #161a20;
+  --panel-border: #2a2f3a;
+
+  --accent: #5b8cff;
+  --accent-soft: rgba(91, 140, 255, 0.15);
+
+  --ok: #3bcf84;
+  --bad: #ff6b6b;
+
+  --sev-green: rgba(59, 207, 132, 0.14);
+  --sev-yellow: rgba(255, 196, 77, 0.18);
+  --sev-red: rgba(255, 107, 107, 0.18);
+
+  --link: #7aa2ff;
+  --link-visited: #b090ff;
+
+  --hr: #2a2f3a;
+  --code-bg: #151a21;
+}
+
+/* Respect system dark if user hasn’t toggled Anki’s nightMode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1115;
+    --fg: #e8e8e8;
+    --muted: #b3b9c5;
+    --border: #2a2f3a;
+
+    --panel-bg: #161a20;
+    --panel-border: #2a2f3a;
+
+    --accent: #5b8cff;
+    --accent-soft: rgba(91, 140, 255, 0.15);
+
+    --ok: #3bcf84;
+    --bad: #ff6b6b;
+
+    --sev-green: rgba(59, 207, 132, 0.14);
+    --sev-yellow: rgba(255, 196, 77, 0.18);
+    --sev-red: rgba(255, 107, 107, 0.18);
+
+    --link: #7aa2ff;
+    --link-visited: #b090ff;
+
+    --hr: #2a2f3a;
+    --code-bg: #151a21;
+  }
+}
+
+/* 2) Base elements */
+html,
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
+a {
+  color: var(--link);
+}
+a:visited {
+  color: var(--link-visited);
+}
+hr {
+  border: 0;
+  border-top: 1px solid var(--hr);
+  margin: 16px 0;
+}
+
+.deck-title {
+  color: var(--fg);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: left;
+}
+
+/* 3) Layout: board + sidebar */
+.wrap {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.card-column {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 4) Board image sizing */
+.imgwrap {
+  width: 100%;
+}
+.imgwrap img,
+.imgwrap svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Dark-mode board tweak */
+body.nightMode .imgwrap img,
+body.nightMode .imgwrap svg {
+  filter: brightness(0.9) contrast(1.05) !important;
+}
+@media (prefers-color-scheme: dark) {
+  .imgwrap img,
+  .imgwrap svg {
+    filter: brightness(0.9) contrast(1.05) !important;
+  }
+}
+
+/* 5) Choices (fronts) */
+.choices {
+  padding-top: 40px; /* aligns vertically with backs */
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.choices .btn,
+.choices .submit-btn {
+  width: auto;
+  align-self: flex-start;
+  min-width: 80px;
+  max-width: 140px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.btn {
+  margin-top: -10px;
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel-bg);
+  color: var(--fg);
+  cursor: pointer;
+  max-width: 105px;
+  white-space: normal;
+  text-align: left;
+}
+.btn:hover {
+  background: color-mix(in oklab, var(--panel-bg), var(--fg) 6%);
+}
+.btn.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft) inset;
+}
+
+/* Submit button (fronts) */
+.submit-btn {
+  margin-top: 20px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: color-mix(in oklab, var(--panel-bg), var(--fg) 6%);
+  color: var(--fg);
+  font-size: 15px;
+  cursor: pointer;
+  max-width: 105px;
+}
+.submit-btn:hover {
+  background: color-mix(in oklab, var(--panel-bg), var(--fg) 12%);
+}
+.submit-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(30%);
+  pointer-events: none;
+}
+
+/* 6) Metrics (backs) — single row everywhere */
+.metrics-grid {
+  display: grid !important;
+  grid-template-columns: none !important; /* ignore any fixed template */
+  grid-auto-flow: column !important; /* lay items left→right */
+  grid-auto-columns: max-content !important;
+
+  column-gap: clamp(14px, 2.4vw, 24px) !important;
+  row-gap: 0 !important;
+  align-items: end !important;
+
+  width: 100% !important;
+  white-space: nowrap !important;
+}
+.metric {
+  display: grid;
+  grid-template-rows: auto auto;
+  row-gap: 2px;
+}
+.metric .label {
+  font-size: clamp(12px, 1.2vw, 13.5px);
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
+}
+.metric .value {
+  font-size: clamp(13.5px, 1.4vw, 16px);
+  text-align: center;
+  white-space: nowrap;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+/* 7) Feedback highlights (backs) */
+.best,
+.correct {
+  font-weight: 700;
+}
+.user-choice.user-correct {
+  background: var(--sev-green);
+  box-shadow: 0 0 0 2px var(--sev-green) inset;
+  border-radius: 4px;
+}
+.user-wrong {
+  border-radius: 4px;
+}
+.user-wrong.sev-green {
+  background: var(--sev-green);
+  box-shadow: 0 0 0 2px var(--sev-green) inset;
+}
+.user-wrong.sev-yellow {
+  background: var(--sev-yellow);
+  box-shadow: 0 0 0 2px var(--sev-yellow) inset;
+}
+.user-wrong.sev-red {
+  background: var(--sev-red);
+  box-shadow: 0 0 0 2px var(--sev-red) inset;
+}
+
+/* 8) EMG table footnote (backs) */
+.emg-footnote {
+  margin-top: 0;
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+  line-height: 1.4;
+  padding-left: 0.5em;
+  text-align: left !important;
+}
+
+/* 9) Lists */
+ul,
+ol {
+  margin-top: 0;
+  padding-left: 2em;
+}
+li {
+  margin-top: 5px;
+}
+
+/* 10) Utilities */
+.num,
+.tabular {
+  text-align: right;
+  white-space: nowrap;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 11) Very small screens */
+@media (max-width: 500px) {
+  .wrap {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .imgwrap,
+  .choices {
+    max-width: 100%;
+    flex: 1 1 100%;
+  }
+}
+
+/* 12) Small helper note block */
+.ios-note {
+  margin-top: 15px;
+  font-size: 13px;
+  color: var(--muted, #555);
+  text-align: center;
+  margin-left: 0;
+}
+
+/* ===========================
+   iOS-specific behaviors
+   =========================== */
+
+/* A) Stable image sizing on iOS:
+
+   Use stable/“small” viewport units to avoid zooming/pumping when
+   Safari’s toolbars show/hide. Script sets: --titleH, --anki-chrome, --vh.
+*/
+body.is-ios .imgwrap img,
+body.is-ios .imgwrap svg {
+  max-width: 100% !important;
+  height: auto !important;
+  /* Prefer stable viewport (svh); fallback to dvh; last resort to JS --vh */
+  max-height: calc(100svh - var(--titleH) - var(--anki-chrome)) !important;
+}
+@supports not (height: 100svh) {
+  body.is-ios .imgwrap img,
+  body.is-ios .imgwrap svg {
+    max-height: calc(100dvh - var(--titleH) - var(--anki-chrome)) !important;
+  }
+}
+@supports not (height: 100dvh) {
+  body.is-ios .imgwrap img,
+  body.is-ios .imgwrap svg {
+    max-height: calc(
+      (var(--vh, 1vh) * 100) - var(--titleH) - var(--anki-chrome)
+    ) !important;
+  }
+}
+
+/* B) iOS PORTRAIT: board above; centered row of buttons */
+@media (orientation: portrait) {
+  body.is-ios .wrap {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px;
+  }
+  body.is-ios .choices {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  body.is-ios .choices .btn,
+  body.is-ios .choices .submit-btn {
+    flex: 0 0 auto !important;
+    white-space: nowrap;
+    max-width: none;
+    min-width: 110px;
+  }
+}
+
+/* C) iOS LANDSCAPE: two columns; board left; fixed-size buttons right */
+@media (orientation: landscape) {
+  body.is-ios .wrap {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 24px;
+  }
+  body.is-ios .card-column {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  /* Sidebar buttons: fixed-size, spaced, centered vertically */
+  body.is-ios .choices {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: center !important; /* don’t stretch */
+    gap: 20px !important;
+    flex: 0 0 220px !important;
+    max-width: 260px !important;
+    margin: 0 !important;
+    align-self: center !important;
+  }
+  body.is-ios .choices .btn,
+  body.is-ios .choices .submit-btn {
+    flex: 0 0 auto !important;
+    width: auto !important; /* don’t fill sidebar width */
+    max-width: none !important;
+    min-width: 110px;
+    white-space: nowrap;
+  }
+
+  /* Board fills horizontal space (still capped by stable viewport) */
+  body.is-ios .imgwrap img,
+  body.is-ios .imgwrap svg {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Slightly smaller chrome budget in landscape for a larger board (script sets default) */
+  body.is-ios {
+    --anki-chrome: 150px;
+  }
+}
+
+/* D) iPad portrait: compact, centered metrics; tightened EMG table */
+
+@media (orientation: portrait) and (min-width: 700px) {
+  /* Metrics strip: compact and centered */
+  body.is-ios .metrics-grid {
+    grid-template-columns: none !important;
+    display: inline-grid !important;
+    grid-auto-flow: column !important;
+    grid-auto-columns: max-content !important;
+
+    column-gap: clamp(10px, 1.6vw, 14px) !important;
+    row-gap: 0 !important;
+    align-items: end !important;
+
+    width: max-content !important;
+    max-width: 100% !important;
+    margin: 8px auto 0 !important;
+  }
+  body.is-ios .metrics-grid .metric .label {
+    font-size: clamp(13px, 1.6vw, 14px) !important;
+  }
+  body.is-ios .metrics-grid .metric .value {
+    font-size: clamp(14px, 1.8vw, 16px) !important;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* EMG result table: compact, left-aligned, no overlap on first column */
+  body.is-ios #emg-table.result-table {
+    border-collapse: collapse;
+    table-layout: auto;
+    margin: 8px auto;
+    width: max-content; /* shrink to content */
+    max-width: 100%;
+    font-size: clamp(12px, 1.5vw, 14px);
+  }
+  body.is-ios #emg-table.result-table th,
+  body.is-ios #emg-table.result-table td {
+    padding: 2px 6px;
+    text-align: left;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  body.is-ios #emg-table.result-table td:first-child,
+  body.is-ios #emg-table.result-table th:first-child {
+    padding-left: 1.7em; /* room for ✅/❌ */
+    width: 1%; /* keep icon column skinny */
+  }
+}

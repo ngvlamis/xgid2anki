@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{DeckName}}</title>
+
+    <style>
+      /* iOS PORTRAIT: buttons under the board, grid layout (two rows max) */
+      @media (orientation: portrait) {
+        body.is-ios .choices {
+          display: grid !important;
+          gap: 10px 12px;
+          width: 100% !important;
+          max-width: 640px;
+          margin: 8px auto 0 !important;
+          padding-top: 0 !important;
+        }
+
+        /* Script sets cols-2 for 4 buttons; cols-3 for 3,5,6 */
+        body.is-ios .choices.cols-2 {
+          grid-template-columns: repeat(2, minmax(110px, 1fr));
+        }
+        body.is-ios .choices.cols-3 {
+          grid-template-columns: repeat(3, minmax(110px, 1fr));
+        }
+
+        body.is-ios .choices .btn,
+        body.is-ios .choices .submit-btn {
+          max-width: none !important;
+          width: 100%;
+          white-space: nowrap;
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Title (shared style: .deck-title) -->
+    <h2 class="deck-title">{{DeckName}}</h2>
+
+    <!-- Script A: iOS shim (adds is-ios + sets --titleH/--anki-chrome/--vh) -->
+    <script>
+      (function () {
+        const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (isiOS) document.body.classList.add("is-ios");
+
+        const titleEl = document.querySelector(".deck-title");
+        function setTitleH() {
+          const h = titleEl
+            ? Math.ceil(titleEl.getBoundingClientRect().height)
+            : 0;
+          document.documentElement.style.setProperty("--titleH", h + 12 + "px");
+        }
+        function setVH() {
+          const vh = window.innerHeight * 0.01;
+          document.documentElement.style.setProperty("--vh", vh + "px");
+        }
+        function setChrome() {
+          const landscape = window.matchMedia(
+            "(orientation: landscape)",
+          ).matches;
+          const chrome = landscape ? 150 : 160;
+          document.documentElement.style.setProperty(
+            "--anki-chrome",
+            chrome + "px",
+          );
+        }
+        function recalc() {
+          setTitleH();
+          setVH();
+          setChrome();
+        }
+        recalc();
+        window.addEventListener("resize", recalc, { passive: true });
+        window.addEventListener(
+          "orientationchange",
+          () => setTimeout(recalc, 0),
+          { passive: true },
+        );
+      })();
+    </script>
+
+    <div class="wrap">
+      <!-- LEFT: board image (initially shows the position) -->
+      <div class="card-column">
+        <div class="imgwrap" id="boardBox">{{PositionImage}}</div>
+      </div>
+
+      <!-- RIGHT: up to six move buttons + Submit (desktop/Android-with-bridge only) -->
+      <div class="choices" id="choices">
+        <button class="btn" data-idx="1" style="touch-action: manipulation">
+          {{Move1}}
+        </button>
+        <button class="btn" data-idx="2" style="touch-action: manipulation">
+          {{Move2}}
+        </button>
+        <button class="btn" data-idx="3" style="touch-action: manipulation">
+          {{Move3}}
+        </button>
+        <button class="btn" data-idx="4" style="touch-action: manipulation">
+          {{Move4}}
+        </button>
+        <button class="btn" data-idx="5" style="touch-action: manipulation">
+          {{Move5}}
+        </button>
+        <button class="btn" data-idx="6" style="touch-action: manipulation">
+          {{Move6}}
+        </button>
+
+        <button type="button" class="submit-btn" id="submitBtn" disabled>
+          Submit
+        </button>
+      </div>
+    </div>
+
+    <!-- Notes live OUTSIDE .choices so they sit below the buttons, full width -->
+    <div id="iosNote" class="ios-note" style="display: none">
+      After making your choice, tap to see answer.
+    </div>
+    <div id="androidNote" class="ios-note" style="display: none">
+      After making your choice, tap the bottom “Show Answer” button.
+    </div>
+
+    <!-- Hidden SVG templates for board previews (one per move slot) -->
+    <template id="svg-move-1">{{Move1SVG}}</template>
+    <template id="svg-move-2">{{Move2SVG}}</template>
+    <template id="svg-move-3">{{Move3SVG}}</template>
+    <template id="svg-move-4">{{Move4SVG}}</template>
+    <template id="svg-move-5">{{Move5SVG}}</template>
+    <template id="svg-move-6">{{Move6SVG}}</template>
+
+    <script>
+      (function () {
+        const choices = document.getElementById("choices");
+        const submit = document.getElementById("submitBtn");
+        const box = document.getElementById("boardBox");
+        const iosNote = document.getElementById("iosNote");
+        const androidNote = document.getElementById("androidNote");
+
+        const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const isAndroid = /Android/i.test(navigator.userAgent);
+
+        // Can we flip programmatically?
+        let useSubmit = true;
+        if (isiOS) useSubmit = false;
+        if (isAndroid && typeof window.pycmd !== "function") useSubmit = false;
+
+        // Hide Submit + show appropriate note when we can’t flip here
+        if (!useSubmit && submit) {
+          submit.style.display = "none";
+          if (isiOS && iosNote) iosNote.style.display = "block";
+          if (isAndroid && androidNote) androidNote.style.display = "block";
+        }
+
+        // 1) Remove empty move buttons
+        let btns = Array.from(choices.querySelectorAll(".btn")).filter(
+          (btn) => {
+            const t = (btn.textContent || "").trim();
+            if (!t) {
+              btn.remove();
+              return false;
+            }
+            return true;
+          },
+        );
+
+        // 2) Shuffle buttons
+        function shuffle(a) {
+          for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+          }
+          return a;
+        }
+        const shuffled = shuffle(btns);
+        const submitBtn = submit;
+        shuffled.forEach((btn) => choices.insertBefore(btn, submitBtn));
+
+        // 3) iOS portrait: choose 2 or 3 columns so we never exceed two rows
+        (function () {
+          if (!isiOS) return;
+          const count = btns.length;
+          let cols = 3; // 3,5,6 → 3×2
+          if (count === 4) cols = 2; // 4 → tidy 2×2
+          if (count <= 2) cols = count; // safety
+          choices.classList.add(`cols-${cols}`);
+        })();
+
+        // 4) Board preview swap — template-safe for iOS
+        const originalHTML = box ? box.innerHTML : "";
+        function injectFromTemplate(tpl) {
+          if (tpl && tpl.content && tpl.content.firstElementChild) {
+            const node = tpl.content.firstElementChild.cloneNode(true);
+            box.replaceChildren(node);
+            return true;
+          }
+          if (tpl && tpl.innerHTML && tpl.innerHTML.trim()) {
+            box.innerHTML = tpl.innerHTML;
+            return true;
+          }
+          return false;
+        }
+        function setBoardToIdx(idx) {
+          if (!box) return;
+          const tpl = document.getElementById(`svg-move-${idx}`);
+          if (!injectFromTemplate(tpl)) box.innerHTML = originalHTML;
+          requestAnimationFrame(() =>
+            window.dispatchEvent(new Event("resize")),
+          );
+        }
+        function resetBoard() {
+          if (!box) return;
+          box.innerHTML = originalHTML;
+          requestAnimationFrame(() =>
+            window.dispatchEvent(new Event("resize")),
+          );
+        }
+
+        // 5) Persist choice immediately (needed on iOS with no Submit)
+        function persistChoice(btn) {
+          try {
+            if (btn) {
+              sessionStorage.setItem(
+                "ankibg_selected_text",
+                btn.textContent.trim(),
+              );
+              sessionStorage.setItem(
+                "ankibg_selected_idx",
+                btn.getAttribute("data-idx") || "",
+              );
+            } else {
+              sessionStorage.removeItem("ankibg_selected_text");
+              sessionStorage.removeItem("ankibg_selected_idx");
+            }
+          } catch (_) {}
+        }
+
+        // 6) Selection UX
+        function setActive(btn) {
+          choices
+            .querySelectorAll(".btn.active")
+            .forEach((b) => b.classList.remove("active"));
+          if (btn) btn.classList.add("active");
+          persistChoice(btn);
+        }
+
+        // 7) Submit enabled only when a choice is selected (desktop/Android with bridge)
+        function updateSubmitState() {
+          if (!useSubmit || !submit) return;
+          submit.disabled = !choices.querySelector(".btn.active");
+        }
+
+        // 8) Button interactions
+        function handleActivate(btn) {
+          if (btn.classList.contains("active")) {
+            btn.classList.remove("active");
+            persistChoice(null);
+            resetBoard();
+            updateSubmitState();
+            return;
+          }
+          setActive(btn);
+          setBoardToIdx(btn.getAttribute("data-idx"));
+          updateSubmitState();
+        }
+
+        choices.addEventListener(
+          "click",
+          (e) => {
+            const btn = e.target.closest(".btn");
+            if (!btn) return;
+            handleActivate(btn);
+          },
+          { passive: false },
+        );
+
+        choices.addEventListener(
+          "touchend",
+          (e) => {
+            const btn = e.target.closest(".btn");
+            if (!btn) return;
+            e.preventDefault(); // avoid double-activation (touchend→click)
+            handleActivate(btn);
+          },
+          { passive: false },
+        );
+
+        // 9) Flip to back (desktop/Android)
+        function showAnswer() {
+          if (typeof pycmd === "function") {
+            pycmd("ans");
+            return;
+          }
+          if (window.study && typeof window.study.drawAnswer === "function") {
+            window.study.drawAnswer();
+            return;
+          }
+          window.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));
+        }
+
+        if (useSubmit && submit) {
+          submit.addEventListener("click", () => {
+            if (submit.disabled) return;
+            showAnswer();
+          });
+        }
+
+        // 10) Initial state
+        updateSubmitState();
+      })();
+    </script>
+  </body>
+</html>

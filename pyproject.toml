@@ -1,0 +1,64 @@
+[project]
+name = "xgid2anki"
+version = "0.1.0"
+description = "Convert a list of backgammon XGIDs into an interactive Anki study deck."
+readme = "README-pypi.md"
+license = { text = "GPL-3.0-or-later" }
+authors = [
+  { name = "Nicholas G. Vlamis", email = "nvlamis@gc.cuny.edu" }
+]
+requires-python = ">=3.10"
+dependencies = [
+  "genanki",
+  "playwright",
+  "pyyaml",
+  "platformdirs",
+	"tqdm",
+]
+
+keywords = ["backgammon", "anki", "xgid", "study", "deck", "svg", "bglog", "gnubg"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Games/Entertainment :: Board Games",
+  "Environment :: Console",
+  "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/ngvlamis/xgid2anki"
+Repository = "https://github.com/ngvlamis/xgid2anki"
+Issues = "https://github.com/ngvlamis/xgid2anki/issues"
+
+[project.scripts]
+xgid2anki = "xgid2anki.cli:main"
+# xgid2anki-ensure-chromium = "xgid2anki.ensure_headless_chromium:main"
+
+# ---------------- Build backend (Hatchling) ----------------
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+# ---------------- Hatch build config ----------------
+# Use src/ layout
+[tool.hatch.build.targets.wheel]
+packages = ["src/xgid2anki"]
+
+# Include non-Python assets and top-level files in builds
+[tool.hatch.build]
+include = [
+	"src/xgid2anki/**",
+  "src/xgid2anki/templates/**",
+  "src/xgid2anki/themes/**",
+  "LICENSE",
+  "README-pypi.md",
+]
+
+# ------- uv niceties (optional) -------
+[tool.uv]
+index-url = "https://pypi.org/simple"

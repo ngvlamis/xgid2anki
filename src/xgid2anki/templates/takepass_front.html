@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{DeckName}}</title>
+  </head>
+  <body>
+    <h2 class="deck-title">{{DeckName}}</h2>
+
+    <div class="wrap">
+      <!-- LEFT: board -->
+      <div class="card-column">
+        <div class="imgwrap" id="boardBox">{{BoardImage}}</div>
+      </div>
+
+      <!-- RIGHT: Take / Pass (+ Submit off-iOS) -->
+      <div class="choices" id="choices" role="group" aria-label="Take or Pass">
+        <button class="btn" data-idx="1" aria-pressed="false">Take</button>
+        <button class="btn" data-idx="2" aria-pressed="false">Pass</button>
+
+        <!-- Submit is enabled only when a choice is active; hidden on iOS/Android(no bridge) -->
+        <button type="button" class="submit-btn" id="submitBtn" disabled>
+          Submit
+        </button>
+      </div>
+    </div>
+
+    <!-- Notes live OUTSIDE .choices so they appear below the buttons -->
+    <div id="iosNote" class="ios-note" style="display: none">
+      After making your choice, tap to see answer.
+    </div>
+    <div id="androidNote" class="ios-note" style="display: none">
+      After making your choice, tap the bottom “Show Answer” button.
+    </div>
+
+    <!-- Script A: tag iOS + sizing vars for shared CSS -->
+    <script>
+      (function () {
+        const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (isiOS) document.body.classList.add("is-ios");
+
+        const titleEl = document.querySelector(".deck-title");
+        function setTitleH() {
+          const h = titleEl
+            ? Math.ceil(titleEl.getBoundingClientRect().height)
+            : 0;
+          document.documentElement.style.setProperty("--titleH", h + 12 + "px");
+        }
+        function setVH() {
+          const vh = window.innerHeight * 0.01;
+          document.documentElement.style.setProperty("--vh", vh + "px");
+        }
+        function setChrome() {
+          const landscape = window.matchMedia(
+            "(orientation: landscape)",
+          ).matches;
+          const chrome = landscape ? 150 : 160; // tweak if you like more/less room
+          document.documentElement.style.setProperty(
+            "--anki-chrome",
+            chrome + "px",
+          );
+        }
+
+        setTitleH();
+        setVH();
+        setChrome();
+        window.addEventListener(
+          "orientationchange",
+          () => {
+            setTimeout(() => {
+              setTitleH();
+              setChrome();
+            }, 0);
+          },
+          { passive: true },
+        );
+      })();
+    </script>
+
+    <!-- Script B: selection, persistence, flipping, desktop hotkeys -->
+    <script>
+      (function () {
+        const choices = document.getElementById("choices");
+        const submit = document.getElementById("submitBtn");
+        const iosNote = document.getElementById("iosNote");
+        const androidNote = document.getElementById("androidNote");
+
+        const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const isAndroid = /Android/i.test(navigator.userAgent);
+
+        // Clear any stale selection from previous card
+        try {
+          sessionStorage.removeItem("ankibg_selected_text");
+          sessionStorage.removeItem("ankibg_selected_idx");
+        } catch (_) {}
+
+        // Can we flip programmatically here?
+        let useSubmit = true;
+        if (isiOS) useSubmit = false;
+        if (isAndroid && typeof window.pycmd !== "function") useSubmit = false;
+
+        // Hide Submit + show guidance note where needed
+        if (!useSubmit && submit) {
+          submit.style.display = "none";
+          if (isiOS && iosNote) iosNote.style.display = "block";
+          if (isAndroid && androidNote) androidNote.style.display = "block";
+        }
+
+        function persistChoice(btn) {
+          try {
+            if (btn) {
+              const pickedTxt = btn.textContent.trim(); // "Take" | "Pass"
+              const pickedIdx = btn.getAttribute("data-idx") || ""; // "1" | "2"
+              sessionStorage.setItem("ankibg_selected_text", pickedTxt);
+              sessionStorage.setItem("ankibg_selected_idx", pickedIdx);
+            } else {
+              sessionStorage.removeItem("ankibg_selected_text");
+              sessionStorage.removeItem("ankibg_selected_idx");
+            }
+          } catch (_) {}
+        }
+
+        function setActive(btn) {
+          choices.querySelectorAll(".btn.active").forEach((b) => {
+            b.classList.remove("active");
+            b.setAttribute("aria-pressed", "false");
+          });
+          if (btn) {
+            btn.classList.add("active");
+            btn.setAttribute("aria-pressed", "true");
+          }
+          persistChoice(btn);
+        }
+
+        function updateSubmitState() {
+          if (!useSubmit || !submit) return;
+          submit.disabled = !choices.querySelector(".btn.active");
+        }
+
+        // Toggle selection (persist immediately)
+        choices.addEventListener("click", (e) => {
+          const btn = e.target.closest(".btn");
+          if (!btn) return;
+          if (btn.classList.contains("active")) {
+            btn.classList.remove("active");
+            btn.setAttribute("aria-pressed", "false");
+            persistChoice(null);
+            updateSubmitState();
+            return;
+          }
+          setActive(btn);
+          updateSubmitState();
+        });
+
+        function showAnswer() {
+          if (typeof pycmd === "function") {
+            pycmd("ans");
+            return;
+          }
+          if (window.study && typeof window.study.drawAnswer === "function") {
+            window.study.drawAnswer();
+            return;
+          }
+          // Preview fallback
+          window.dispatchEvent(new KeyboardEvent("keydown", { key: " " }));
+        }
+
+        if (useSubmit && submit) {
+          submit.addEventListener("click", () => {
+            if (submit.disabled) return;
+            showAnswer();
+          });
+        }
+
+        // --- Desktop keyboard shortcuts (avoid Anki's reserved keys) ---
+        if (!isiOS && !isAndroid) {
+          const onKey = (e) => {
+            const t = e.target;
+            if (t && /input|textarea|select/i.test(t.tagName)) return;
+
+            const key = e.key.toLowerCase();
+            if (key === "c") {
+              // C = Take
+              const btn = choices.querySelector('[data-idx="1"]');
+              if (btn) {
+                e.preventDefault();
+                e.stopPropagation();
+                setActive(btn);
+                updateSubmitState();
+              }
+              return;
+            }
+            if (key === "p") {
+              // P = Pass
+              const btn = choices.querySelector('[data-idx="2"]');
+              if (btn) {
+                e.preventDefault();
+                e.stopPropagation();
+                setActive(btn);
+                updateSubmitState();
+              }
+              return;
+            }
+            if (key === "enter" && useSubmit && submit && !submit.disabled) {
+              e.preventDefault();
+              e.stopPropagation();
+              showAnswer(); // or let Anki handle Enter if you prefer
+            }
+          };
+          window.addEventListener("keydown", onKey, true);
+        }
+
+        updateSubmitState();
+      })();
+    </script>
+  </body>
+</html>

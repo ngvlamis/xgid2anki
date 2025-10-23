@@ -1,0 +1,194 @@
+/* ====== Shared, used by all four templates ====== */
+
+/* Deck title at the top of every card (fronts + backs) */
+.deck-title {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: left;
+}
+
+/* Two-column wrapper: board (left) + sidebar (right) */
+.wrap {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+/* Left column container, used by both fronts & move_back */
+.card-column {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Board image sizing (applies to both <img> and inline <svg>) */
+.imgwrap {
+  width: 100%;
+}
+.imgwrap img,
+.imgwrap svg {
+  width: clamp(520px, 70vw, 1000px);
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Extra spacing above the submit button on fronts.
+   Note: padding/margin can still be tweaked locally. */
+.submit-btn {
+  margin-top: 20px;
+}
+
+/* Optional footer text block; rarely used in current cards.
+   Credits/footnotes are usually inline instead. */
+.footer {
+  font-size: 12px;
+  color: #666;
+  margin-top: 20px;
+  text-align: left;
+}
+
+/* ===== Front-card choice buttons (cube_front & move_front) ===== */
+.btn {
+  margin-top: -10px;
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 999px;
+  border: 1px solid #bbb;
+  background: #fafafa;
+  cursor: pointer;
+  max-width: 105px;
+  white-space: normal;
+  text-align: left;
+}
+.btn:hover {
+  background: #eee;
+}
+.btn.active {
+  background: #dce8ff;
+  border-color: #6b8cff;
+  box-shadow: 0 0 0 2px #6b8cff44 inset;
+}
+
+/* Submit button base (cube/move/takepass fronts).
+   Local files can override margin-top. */
+.submit-btn {
+  padding: 6px 14px;
+  border: 1px solid #888;
+  border-radius: 4px;
+  background: #e0e0e0;
+  font-size: 15px;
+  cursor: pointer;
+  max-width: 105px;
+}
+.submit-btn:hover {
+  background: #d5d5d5;
+}
+.submit-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(30%);
+  pointer-events: none;
+}
+
+/* ===== Shared “metrics” block (cube_back + takepass_back + move_back) ===== */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(6, max-content);
+  column-gap: 16px;
+  row-gap: 2px;
+  align-items: end;
+}
+.metric {
+  display: grid;
+  grid-template-rows: auto auto;
+  row-gap: 2px;
+}
+.metric .label {
+  font-size: 12px;
+  color: #555;
+  text-align: center;
+}
+.metric .value {
+  font-size: 14px;
+  text-align: center;
+  white-space: nowrap;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== Shared feedback states (cube_back + move_back + takepass_back) ===== */
+
+/* Mark the best/correct row (bold only). Local .correct classes are applied in JS. */
+.best,
+.correct {
+  font-weight: 700;
+}
+
+/* User choice highlighting (✅/❌ overlays are defined locally in each template) */
+.user-choice.user-correct {
+  background: #eaf7ea;
+  box-shadow: 0 0 0 2px #3fbf6b33 inset;
+  border-radius: 4px;
+}
+.user-wrong {
+  border-radius: 4px;
+}
+.user-wrong.sev-green {
+  background: #eaf7ea;
+  box-shadow: 0 0 0 2px #3fbf6b33 inset;
+}
+.user-wrong.sev-yellow {
+  background: #fff7d6;
+  box-shadow: 0 0 0 2px #e3c40033 inset;
+}
+.user-wrong.sev-red {
+  background: #fdeaea;
+  box-shadow: 0 0 0 2px #e6666633 inset;
+}
+
+/* EMG table footnote (backs only) */
+.emg-footnote {
+  margin-top: 0px;
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+  line-height: 1.4;
+  padding-left: 0.5em;
+}
+
+/* List defaults (used in Credits, Further exploration) */
+ul,
+ol {
+  margin-top: 0;
+  padding-left: 2em;
+}
+li {
+  margin-top: 5px;
+}
+
+/* Utility: apply tabular number styling anywhere */
+.num,
+.tabular {
+  text-align: right;
+  white-space: nowrap;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== Mobile adjustments (fronts + safe for backs) ===== */
+@media (max-width: 500px) {
+  .wrap {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .imgwrap,
+  .choices {
+    max-width: 100%;
+    flex: 1 1 100%;
+  }
+}

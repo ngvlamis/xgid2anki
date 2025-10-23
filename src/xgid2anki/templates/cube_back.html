@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{DeckName}}</title>
+
+    <style>
+      /* BACK template for cube decisions.
+         Shared colors/typography/dark-mode come from shared.css. */
+
+      /* RIGHT: fixed-width sidebar (mirrors cube_front) */
+      .rightcol {
+        flex: 0 0 220px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      /* Panel chrome (themed) */
+      .panel {
+        border: 1px solid var(--panel-border);
+        border-radius: 8px;
+        background: var(--panel-bg);
+        padding: 8px 10px;
+      }
+
+      /* Cube EMG table */
+      .result-table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 16px;
+        font-variant-numeric: tabular-nums;
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono",
+          monospace;
+      }
+      .result-table td:first-child {
+        text-align: left;
+        font-family: inherit;
+      }
+      .result-table td.num {
+        text-align: right;
+        white-space: nowrap;
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono",
+          monospace;
+        font-variant-numeric: tabular-nums;
+      }
+      .result-table td.delta {
+        color: var(--muted);
+      }
+
+      /* Best (correct) row → bold only (tints come from shared .user-* classes when applied) */
+      #emg-table .correct {
+        font-weight: 700;
+      }
+
+      /* Chosen-row feedback icons (✅/❌) */
+      .result-table tr td:first-child {
+        position: relative;
+        padding-left: 1.5em;
+      }
+      .result-table tr td:first-child::before {
+        content: "";
+        position: absolute;
+        left: 0.2em;
+        top: 50%;
+        transform: translateY(-50%);
+        line-height: 1;
+      }
+      .result-table tr.user-choice.user-correct td:first-child::before {
+        content: "✅";
+      }
+      .result-table tr.user-choice.user-wrong td:first-child::before {
+        content: "❌";
+      }
+
+      /* “Too good to double” note */
+      .emg-note {
+        margin-top: 8px;
+        font-size: 14px;
+        font-style: italic;
+        color: var(--muted);
+      }
+
+      /* Copy row (XGID) */
+      .copy-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .copy-btn {
+        padding: 6px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--panel-bg);
+        color: var(--fg);
+        cursor: pointer;
+      }
+      .copy-btn:hover {
+        background: color-mix(in oklab, var(--panel-bg), var(--fg) 10%);
+      }
+      .copy-btn:active {
+        transform: translateY(1px);
+      }
+
+      /* Mobile: stack panels and tighten metrics grid */
+      @media (max-width: 500px) {
+        .rightcol,
+        .panel {
+          width: 100%;
+        }
+        .metrics-grid {
+          grid-template-columns: repeat(3, max-content);
+          row-gap: 6px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h2 class="deck-title">{{DeckName}}</h2>
+
+    <div class="wrap">
+      <!-- LEFT: board image -->
+      <div class="imgwrap">{{BoardImage}}</div>
+
+      <!-- RIGHT: metrics + EMG table -->
+      <div class="rightcol">
+        <!-- Metrics (probabilities are player-centric; formatter normalizes display) -->
+        <div class="panel">
+          <div class="metrics-grid" id="metricsGrid">
+            <div class="metric">
+              <div class="label">Win</div>
+              <div class="value" data-key="WPercentage">{{WPercentage}}</div>
+            </div>
+            <div class="metric">
+              <div class="label">Win G</div>
+              <div class="value" data-key="WGPercentage">{{WGPercentage}}</div>
+            </div>
+            <div class="metric">
+              <div class="label">Win BG</div>
+              <div class="value" data-key="WBGPercentage">
+                {{WBGPercentage}}
+              </div>
+            </div>
+            <div class="metric">
+              <div class="label">Lose G</div>
+              <div class="value" data-key="OppGPercentage">
+                {{OppGPercentage}}
+              </div>
+            </div>
+            <div class="metric">
+              <div class="label">Lose BG</div>
+              <div class="value" data-key="OppBGPercentage">
+                {{OppBGPercentage}}
+              </div>
+            </div>
+            <div class="metric">
+              <div class="label">Equity</div>
+              <div class="value" data-key="Equity">{{Equity}}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cube EMG table. DP is 1.000 for the doubler by definition. -->
+        <div class="panel">
+          <table class="result-table" id="emg-table">
+            <tr id="nd">
+              <td>No Double</td>
+              <td class="num" id="nd-emg">{{ND EMG}}</td>
+              <td class="num delta" id="nd-delta"></td>
+            </tr>
+            <tr id="dt">
+              <td>Double / Take</td>
+              <td class="num" id="dt-emg">{{DT EMG}}</td>
+              <td class="num delta" id="dt-delta"></td>
+            </tr>
+            <tr id="dp">
+              <td>Double / Pass</td>
+              <td class="num" id="dp-emg">1.000</td>
+              <td class="num delta" id="dp-delta"></td>
+            </tr>
+          </table>
+          <div id="emg-note" class="emg-note" style="display: none"></div>
+        </div>
+
+        <div class="emg-footnote">{{Plies}}-ply analysis</div>
+      </div>
+    </div>
+
+    <hr />
+
+    <h3>Further exploration</h3>
+    <div>
+      <ul>
+        <li>
+          <a href="https://opengammon.com/position/{{XGID}}">
+            <strong>OpenGammon Position Analyzer</strong>
+          </a>
+          (An online interface to GNU Backgammon)
+        </li>
+
+        <li>
+          <div class="copy-row">
+            <span id="copy-visible">{{XGID}}</span>
+            <input
+              id="copy-hidden"
+              type="text"
+              value="{{XGID}}"
+              readonly
+              style="position: absolute; left: -9999px"
+            />
+            <button type="button" class="copy-btn" id="copyBtn">Copy</button>
+            <span
+              id="copyStatus"
+              style="margin-left: 8px; font-size: 12px; color: var(--muted)"
+            ></span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <hr />
+    <h3>Credits</h3>
+    <div>
+      <ul>
+        <li>Card generated by xgid2anki.</li>
+        <li>
+          Image generated with
+          <a href="https://nt.bglog.org/NT.html"><strong>bglog</strong></a
+          >.
+        </li>
+        <li>
+          Analysis provided by
+          <a href="https://www.gnu.org/software/gnubg/"
+            ><strong>GNU Backgammon</strong></a
+          >.
+        </li>
+      </ul>
+    </div>
+
+    <script>
+      /* === Metrics formatting === */
+      (function () {
+        const grid = document.getElementById("metricsGrid");
+        if (!grid) return;
+
+        function parseNum(s) {
+          const t = String(s ?? "").trim();
+          if (!t) return null;
+          const pct = t.endsWith("%");
+          const n = parseFloat(t.replace("%", "").replace(",", "."));
+          if (!Number.isFinite(n)) return null;
+          return pct || n > 1.5 ? n / 100 : n;
+        }
+        const clamp01 = (x) => Math.max(0, Math.min(1, x));
+        const fmtProb = (p) => (p == null ? "—" : clamp01(p).toFixed(3));
+        const fmtEq = (e) =>
+          e == null ? "—" : (e >= 0 ? "+" : "") + e.toFixed(3);
+
+        grid.querySelectorAll(".value").forEach((el) => {
+          const key = el.getAttribute("data-key");
+          const val = parseNum(el.textContent);
+          el.textContent = key === "Equity" ? fmtEq(val) : fmtProb(val);
+        });
+      })();
+    </script>
+
+    <script>
+      /* === Cube EMG logic + user feedback === */
+      (function () {
+        function num(s) {
+          const n = parseFloat(
+            String(s ?? "")
+              .trim()
+              .replace(",", "."),
+          );
+          return Number.isFinite(n) ? n : null;
+        }
+
+        const nd = num(`{{ND EMG}}`);
+        const dt = num(`{{DT EMG}}`);
+        const dp = 1.0;
+
+        function bestCubeAction(nd, dt) {
+          if (nd == null && dt == null) return "No Data";
+          if (nd != null && nd > 1) return "No Double (Too Good)";
+          if (dt != null && (nd == null || dt > nd))
+            return dt >= 1 ? "Double / Pass" : "Double / Take";
+          return "No Double";
+        }
+
+        const answer = bestCubeAction(nd, dt);
+
+        const note = document.getElementById("emg-note");
+        if (note) {
+          if (nd != null && nd > 1) {
+            note.textContent = "Note: too good to double";
+            note.style.display = "";
+          } else {
+            note.style.display = "none";
+          }
+        }
+
+        function fmtDelta(x) {
+          if (x == null || !Number.isFinite(x)) return "";
+          const s = x >= 0 ? "+" : "";
+          return `(${s}${x.toFixed(3)})`;
+        }
+
+        let bestEmg = null;
+        if (answer === "No Double" || answer === "No Double (Too Good)")
+          bestEmg = nd;
+        else if (answer === "Double / Take") bestEmg = dt;
+        else if (answer === "Double / Pass") bestEmg = dp;
+
+        if (bestEmg != null && Number.isFinite(bestEmg)) {
+          const ndDelta = nd != null ? nd - bestEmg : null;
+          const dtDelta = dt != null ? dt - bestEmg : null;
+          const dpDelta = dp - bestEmg;
+
+          const ndCell = document.getElementById("nd-delta");
+          const dtCell = document.getElementById("dt-delta");
+          const dpCell = document.getElementById("dp-delta");
+          if (ndCell) ndCell.textContent = fmtDelta(ndDelta);
+          if (dtCell) dtCell.textContent = fmtDelta(dtDelta);
+          if (dpCell) dpCell.textContent = fmtDelta(dpDelta);
+        }
+
+        const table = document.getElementById("emg-table");
+        const rows = table ? table.querySelectorAll("tr") : [];
+        const normalizedAnswer =
+          answer && answer.startsWith("No Double") ? "No Double" : answer;
+
+        rows.forEach((row) => {
+          const label = row.cells?.[0]?.textContent?.trim();
+          if (label === normalizedAnswer) row.classList.add("correct");
+        });
+
+        // Pull the user’s pick from the front
+        let pickedText = "";
+        try {
+          pickedText = (
+            sessionStorage.getItem("ankibg_selected_text") || ""
+          ).trim();
+        } catch (_) {}
+
+        if (!pickedText) {
+          let pickedIdx = "";
+          try {
+            pickedIdx = (
+              sessionStorage.getItem("ankibg_selected_idx") || ""
+            ).trim();
+          } catch (_) {}
+          if (pickedIdx === "nd") pickedText = "No Double";
+          if (pickedIdx === "dt") pickedText = "Double / Take";
+          if (pickedIdx === "dp") pickedText = "Double / Pass";
+        }
+
+        if (pickedText) {
+          const pickedRow = Array.from(rows).find(
+            (r) => r.cells?.[0]?.textContent?.trim() === pickedText,
+          );
+          if (pickedRow) {
+            pickedRow.classList.add("user-choice");
+            if (pickedText === normalizedAnswer) {
+              pickedRow.classList.add("user-correct");
+            } else if (bestEmg != null) {
+              pickedRow.classList.add("user-wrong");
+              let pickedEmg = null;
+              if (pickedText === "No Double") pickedEmg = nd;
+              else if (pickedText === "Double / Take") pickedEmg = dt;
+              else if (pickedText === "Double / Pass") pickedEmg = dp;
+
+              if (pickedEmg != null) {
+                const deltaAbs = Math.abs(pickedEmg - bestEmg);
+                if (deltaAbs > 0.08) pickedRow.classList.add("sev-red");
+                else if (deltaAbs >= 0.02)
+                  pickedRow.classList.add("sev-yellow");
+                else pickedRow.classList.add("sev-green");
+              }
+            }
+          }
+        }
+      })();
+    </script>
+
+    <script>
+      /* XGID clipboard helper + OpenGammon URL sanitizer */
+      (function () {
+        const btn = document.getElementById("copyBtn");
+        const input = document.getElementById("copy-hidden");
+        const note = document.getElementById("copyStatus");
+
+        function feedback(msg) {
+          const prev = note.textContent;
+          note.textContent = msg;
+          setTimeout(() => (note.textContent = prev), 1200);
+        }
+
+        if (btn) {
+          btn.addEventListener("click", () => {
+            if (!input) return;
+            input.focus();
+            input.select();
+            let ok = false;
+            try {
+              ok = document.execCommand("copy");
+            } catch (_) {}
+            feedback(ok ? "Copied!" : "Press Ctrl/Cmd+C");
+          });
+        }
+
+        const xgid = "{{XGID}}".trim();
+        const fixed = xgid.replace(/=/g, ":");
+        const link = document.querySelector(
+          'a[href*="opengammon.com/position"]',
+        );
+        if (link) link.href = `https://opengammon.com/position/${fixed}`;
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{DeckName}}</title>
+
+    <style>
+      /* BACK template for MOVE decisions.
+         Colors/typography/dark-mode & responsive behavior come from shared CSS. */
+
+      /* RIGHT column: metrics + ranked list (mirrors other backs) */
+      .rightcol {
+        flex: 0 0 220px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      /* Panel chrome */
+      .panel {
+        border: 1px solid var(--panel-border);
+        border-radius: 8px;
+        background: var(--panel-bg);
+        padding: 8px 10px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      /* Ranked list layout: [icon] | Move | EMG | ΔEMG */
+      .ranking ol {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .ranking li {
+        display: grid;
+        grid-template-columns: 1.6ch 1fr max-content max-content;
+        column-gap: 12px;
+        align-items: baseline;
+        padding: 6px 0;
+        font-size: 16px;
+        cursor: pointer;
+        user-select: none;
+        border-radius: 4px; /* aligns with shared tints */
+      }
+      .ranking .icon {
+        display: inline-block;
+        width: 1.6ch;
+        padding-left: 0.5ch; /* slight indent */
+        text-align: left;
+      }
+      .ranking .icon::before {
+        content: "";
+      } /* becomes ✅ or ❌ */
+      .ranking .move {
+        text-align: left;
+      }
+      .ranking .emg,
+      .ranking .diff {
+        text-align: right;
+        white-space: nowrap;
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono",
+          monospace;
+        font-variant-numeric: tabular-nums;
+        color: var(--fg);
+      }
+
+      /* Visual states */
+      .ranking li.best {
+        font-weight: 700;
+      }
+      .ranking
+        li.selected:not(.user-choice):not(.user-correct):not(.user-wrong) {
+        background: var(--accent-soft);
+        outline: 2px solid var(--accent);
+        outline-offset: -2px;
+      }
+
+      /* ✅ / ❌ icons for the user-picked row */
+      .ranking li.user-choice.user-correct .icon::before {
+        content: "✅";
+      }
+      .ranking li.user-choice.user-wrong .icon::before {
+        content: "❌";
+      }
+
+      /* iOS: make sure inline SVGs act like responsive images */
+      body.is-ios .imgwrap svg {
+        display: block;
+        width: 100%;
+        height: auto;
+        max-width: 100%;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h2 class="deck-title">{{DeckName}}</h2>
+
+    <!-- Script A: iOS shim (set is-ios + sizing vars) -->
+    <script>
+      (function () {
+        const isiOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (isiOS) document.body.classList.add("is-ios");
+
+        const titleEl = document.querySelector(".deck-title");
+        function setTitleH() {
+          const h = titleEl
+            ? Math.ceil(titleEl.getBoundingClientRect().height)
+            : 0;
+          document.documentElement.style.setProperty("--titleH", h + 12 + "px");
+        }
+        function setVH() {
+          const vh = window.innerHeight * 0.01;
+          document.documentElement.style.setProperty("--vh", vh + "px");
+        }
+        function setChrome() {
+          const landscape = window.matchMedia(
+            "(orientation: landscape)",
+          ).matches;
+          const chrome = landscape ? 150 : 160; // tweak if your device needs it
+          document.documentElement.style.setProperty(
+            "--anki-chrome",
+            chrome + "px",
+          );
+        }
+        function recalc() {
+          setTitleH();
+          setVH();
+          setChrome();
+        }
+        recalc();
+        window.addEventListener("resize", recalc, { passive: true });
+        window.addEventListener(
+          "orientationchange",
+          () => setTimeout(recalc, 0),
+          { passive: true },
+        );
+      })();
+    </script>
+
+    <div class="wrap">
+      <!-- LEFT: board image (default = original position; row click swaps to that move’s SVG) -->
+      <div class="card-column">
+        <div class="imgwrap" id="boardBox">{{PositionImage}}</div>
+      </div>
+
+      <!-- RIGHT: metrics + ranked move list -->
+      <div class="rightcol">
+        <!-- Metrics (player-centric). Formatter prints probs as 0.000; Equity as ±0.000 -->
+        <div class="panel">
+          <div class="metrics-grid" id="metricsGrid">
+            <div class="metric">
+              <div class="label">Win</div>
+              <div class="value" data-key="WPercentage">{{WPercentage}}</div>
+            </div>
+            <div class="metric">
+              <div class="label">Win G</div>
+              <div class="value" data-key="WGPercentage">{{GPercentage}}</div>
+            </div>
+            <div class="metric">
+              <div class="label">Win BG</div>
+              <div class="value" data-key="WBGPercentage">{{BGPercentage}}</div>
+            </div>
+            <div class="metric">
+              <div class="label">Lose G</div>
+              <div class="value" data-key="OppGPercentage">
+                {{OppGPercentage}}
+              </div>
+            </div>
+            <div class="metric">
+              <div class="label">Lose BG</div>
+              <div class="value" data-key="OppBGPercentage">
+                {{OppBGPercentage}}
+              </div>
+            </div>
+            <div class="metric">
+              <div class="label">Equity</div>
+              <div class="value" data-key="Equity">{{Equity}}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ranked moves (already best→worst in your data). ΔEMG is relative to best. -->
+        <div class="panel ranking" id="rankingBox">
+          <ol id="rankingList"></ol>
+        </div>
+
+        <div class="emg-footnote">{{Plies}}-ply analysis</div>
+      </div>
+    </div>
+
+    <hr />
+
+    <h3>Further exploration</h3>
+    <ul>
+      <li>
+        <a href="https://opengammon.com/position/{{XGID}}">
+          <strong>OpenGammon Position Analyzer</strong>
+        </a>
+        (An online interface to GNU Backgammon)
+      </li>
+      <li>
+        <div
+          class="copy-row"
+          style="display: flex; gap: 8px; align-items: center"
+        >
+          <span id="copy-visible">{{XGID}}</span>
+          <input
+            id="copy-hidden"
+            type="text"
+            value="{{XGID}}"
+            readonly
+            style="position: absolute; left: -9999px"
+          />
+          <button type="button" class="copy-btn" id="copyBtn">Copy</button>
+          <span
+            id="copyStatus"
+            style="margin-left: 8px; font-size: 12px; color: var(--muted)"
+          ></span>
+        </div>
+      </li>
+    </ul>
+
+    <hr />
+    <h3>Credits</h3>
+    <ul>
+      <li>Card generated by xgid2anki.</li>
+      <li>
+        Image generated with
+        <a href="https://nt.bglog.org/NT.html"><strong>bglog</strong></a
+        >.
+      </li>
+      <li>
+        Analysis provided by
+        <a href="https://www.gnu.org/software/gnubg/"
+          ><strong>GNU Backgammon</strong></a
+        >.
+      </li>
+    </ul>
+
+    <!-- Metrics formatting -->
+    <script>
+      (function () {
+        const grid = document.getElementById("metricsGrid");
+        if (!grid) return;
+
+        function parseNum(s) {
+          const t = String(s ?? "").trim();
+          if (!t) return null;
+          const pct = t.endsWith("%");
+          const n = parseFloat(t.replace("%", "").replace(",", "."));
+          if (!Number.isFinite(n)) return null;
+          return pct || n > 1.5 ? n / 100 : n; // accept "55%" or 0.55
+        }
+        const clamp01 = (x) => Math.max(0, Math.min(1, x));
+        const fmtProb = (p) => (p == null ? "—" : clamp01(p).toFixed(3));
+        const fmtEq = (e) =>
+          e == null ? "—" : (e >= 0 ? "+" : "") + e.toFixed(3);
+
+        grid.querySelectorAll(".value").forEach((el) => {
+          const key = el.getAttribute("data-key");
+          const val = parseNum(el.textContent);
+          el.textContent = key === "Equity" ? fmtEq(val) : fmtProb(val);
+        });
+      })();
+    </script>
+
+    <script>
+      (function () {
+        const box = document.getElementById("boardBox");
+        const rankingList = document.getElementById("rankingList");
+        if (!rankingList) return;
+
+        const toNum = (s) => {
+          const n = parseFloat(
+            String(s ?? "")
+              .trim()
+              .replace(",", "."),
+          );
+          return Number.isFinite(n) ? n : null;
+        };
+
+        // Collect moves (skip blanks)
+        const moves = [
+          { idx: "1", label: `{{Move1}}`, emg: toNum(`{{Move1EMG}}`) },
+          { idx: "2", label: `{{Move2}}`, emg: toNum(`{{Move2EMG}}`) },
+          { idx: "3", label: `{{Move3}}`, emg: toNum(`{{Move3EMG}}`) },
+          { idx: "4", label: `{{Move4}}`, emg: toNum(`{{Move4EMG}}`) },
+          { idx: "5", label: `{{Move5}}`, emg: toNum(`{{Move5EMG}}`) },
+          { idx: "6", label: `{{Move6}}`, emg: toNum(`{{Move6EMG}}`) },
+        ]
+          .map((m) => ({ ...m, label: String(m.label || "").trim() }))
+          .filter((m) => m.label.length > 0);
+
+        if (!moves.length) return;
+
+        const baseEmg = moves[0].emg; // best EMG (row 1)
+        const bestIdx = moves[0].idx;
+
+        function fmtEMG(e) {
+          return e == null ? "" : (e >= 0 ? "+" : "") + e.toFixed(3);
+        }
+        function fmtDiff(d) {
+          return d == null
+            ? ""
+            : "(" + (d >= 0 ? "+" : "") + d.toFixed(3) + ")";
+        }
+
+        // Build rows — now explicitly interactive for iOS
+        rankingList.innerHTML = moves
+          .map((m, i) => {
+            const diff =
+              m.emg != null && baseEmg != null ? m.emg - baseEmg : null;
+            const bestCls = i === 0 ? " best" : "";
+            return `<li data-idx="${m.idx}" data-emg="${m.emg ?? ""}" class="${bestCls}"
+                 role="button" tabindex="0" aria-label="Preview move ${m.idx}: ${m.label}"
+                 style="touch-action: manipulation;">
+        <span class="icon" aria-hidden="true"></span>
+        <span class="move">${m.label}</span>
+        <span class="emg">${fmtEMG(m.emg)}</span>
+        <span class="diff">${fmtDiff(diff)}</span>
+      </li>`;
+          })
+          .join("");
+
+        // --- iOS-robust board swap (uses <template>.content when available) ---
+        const originalHTML = box ? box.innerHTML : "";
+        function injectFromTemplate(tpl) {
+          if (tpl && tpl.content && tpl.content.firstElementChild) {
+            const node = tpl.content.firstElementChild.cloneNode(true);
+            box.replaceChildren(node);
+            return true;
+          }
+          if (tpl && tpl.innerHTML && tpl.innerHTML.trim()) {
+            box.innerHTML = tpl.innerHTML;
+            return true;
+          }
+          return false;
+        }
+        function setBoardToIdx(idx) {
+          if (!box) return;
+          const tpl = document.getElementById(`svg-move-${idx}`);
+          if (!injectFromTemplate(tpl)) box.innerHTML = originalHTML;
+          requestAnimationFrame(() =>
+            window.dispatchEvent(new Event("resize")),
+          );
+        }
+        function setSelectedIdx(idx) {
+          rankingList.querySelectorAll("li.selected").forEach((li) => {
+            li.classList.remove("selected");
+            li.removeAttribute("aria-current");
+          });
+          const li = rankingList.querySelector(`li[data-idx="${idx}"]`);
+          if (li) {
+            li.classList.add("selected");
+            li.setAttribute("aria-current", "true");
+          }
+        }
+
+        // Default preview = best row
+        setBoardToIdx(bestIdx);
+        setSelectedIdx(bestIdx);
+
+        // Unified handler
+        function activate(li) {
+          const idx = li.getAttribute("data-idx");
+          if (!idx) return;
+          setBoardToIdx(idx);
+          setSelectedIdx(idx);
+        }
+
+        function onClickOrTouch(e) {
+          const li = e.target.closest("li[data-idx]");
+          if (!li) return;
+          // Prevent duplicate activation on iOS (touchend followed by click)
+          if (e.type === "touchend") e.preventDefault();
+          activate(li);
+        }
+
+        function onKey(e) {
+          if (e.key !== "Enter" && e.key !== " ") return;
+          const li = e.target.closest("li[data-idx]");
+          if (!li) return;
+          e.preventDefault();
+          activate(li);
+        }
+
+        // Listen to both click and touchend for iOS
+        rankingList.addEventListener("click", onClickOrTouch, {
+          passive: false,
+        });
+        rankingList.addEventListener("touchend", onClickOrTouch, {
+          passive: false,
+        });
+        rankingList.addEventListener("keydown", onKey, { passive: false });
+
+        // --- Add ✅/❌ + severity to the row chosen on the FRONT ---
+        let pickedText = "",
+          pickedIdx = "";
+        try {
+          pickedText = (
+            sessionStorage.getItem("ankibg_selected_text") || ""
+          ).trim();
+          pickedIdx = (
+            sessionStorage.getItem("ankibg_selected_idx") || ""
+          ).trim();
+        } catch (_) {}
+
+        const pickedRow =
+          (pickedIdx &&
+            rankingList.querySelector(`li[data-idx="${pickedIdx}"]`)) ||
+          Array.from(rankingList.querySelectorAll("li")).find(
+            (li) =>
+              li.querySelector(".move")?.textContent?.trim() === pickedText,
+          );
+
+        if (pickedRow) {
+          pickedRow.classList.add("user-choice");
+          if (pickedRow.classList.contains("best")) {
+            pickedRow.classList.add("user-correct"); // ✅ + green tint (shared.css)
+          } else {
+            pickedRow.classList.add("user-wrong"); // ❌ + sev tint
+            const pickedEmg = parseFloat(pickedRow.getAttribute("data-emg"));
+            if (Number.isFinite(pickedEmg) && Number.isFinite(baseEmg)) {
+              const deltaAbs = Math.abs(pickedEmg - baseEmg);
+              if (deltaAbs > 0.08) pickedRow.classList.add("sev-red");
+              else if (deltaAbs >= 0.02) pickedRow.classList.add("sev-yellow");
+              else pickedRow.classList.add("sev-green");
+            }
+          }
+        }
+      })();
+    </script>
+
+    <!-- XGID copy + OpenGammon URL fix -->
+    <script>
+      (function () {
+        const btn = document.getElementById("copyBtn");
+        const input = document.getElementById("copy-hidden");
+        const note = document.getElementById("copyStatus");
+
+        function feedback(msg) {
+          if (!note) return;
+          const prev = note.textContent;
+          note.textContent = msg;
+          setTimeout(() => (note.textContent = prev), 1200);
+        }
+
+        if (btn) {
+          btn.addEventListener("click", async () => {
+            if (!input) return;
+            input.focus();
+            input.select();
+            let ok = false;
+            try {
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(input.value);
+                ok = true;
+              } else {
+                ok = document.execCommand("copy");
+              }
+            } catch (_) {}
+            feedback(ok ? "Copied!" : "Press Ctrl/Cmd+C");
+          });
+        }
+
+        // Replace '=' with ':' in XGID for OpenGammon
+        const xgid = "{{XGID}}".trim();
+        const fixed = xgid.replace(/=/g, ":");
+        const link = document.querySelector(
+          'a[href*="opengammon.com/position"]',
+        );
+        if (link) link.href = `https://opengammon.com/position/${fixed}`;
+      })();
+    </script>
+
+    <!-- SVG templates for swapping LEFT board on row click -->
+    <template id="svg-move-1">{{Move1SVG}}</template>
+    <template id="svg-move-2">{{Move2SVG}}</template>
+    <template id="svg-move-3">{{Move3SVG}}</template>
+    <template id="svg-move-4">{{Move4SVG}}</template>
+    <template id="svg-move-5">{{Move5SVG}}</template>
+    <template id="svg-move-6">{{Move6SVG}}</template>
+  </body>
+</html>
