@@ -188,7 +188,7 @@ This will:
 Import the resulting `.apkg` into [Anki](https://apps.ankiweb.net) and start studying.
 
 > [!NOTE]
-> The example file used above — along with another sample XGID list and their generated Anki decks — can be found in [**docs/examples/**](docs/examples).  
+> The example file used above — along with another sample XGID list and their generated Anki decks — can be found in [**docs/examples/**](https://github.com/ngvlamis/xgid2anki/tree/main/docs/examples).  
 
 ---
 
@@ -248,7 +248,8 @@ cube-plies: 2
 theme: ~/themes/my_theme.json
 input:
   - ~/xgids/my_deck.txt
-  - 4HPwATDgc/ABMA:cAgAAAAAAAAA
+  - XGID=-b----E-C---eE---c-e----B-:0:0:1:65:0:0:0:7:10
+
 ```
 Then run:
 
@@ -279,7 +280,7 @@ You can create your own visual theme directly on the [bglog website](https://nt.
    xgid2anki positions.txt --theme my_custom_theme.json
    ```
 
-   or
+   or in your YAML config file, add:
 
    ```yaml
    theme: my_custom_theme.json
@@ -308,7 +309,7 @@ The file is then cached locally (via `platformdirs`) for offline use in later ru
 ## 📜 License
 
 Distributed under the **GNU General Public License v3.0 or later**.  
-See the [LICENSE](https://www.gnu.org/licenses/gpl-3.0) file for details.
+See the [LICENSE](https://github.com/ngvlamis/xgid2anki/blob/main/LICENSE) file for details.
 
 ```
 SPDX-License-Identifier: GPL-3.0-or-later
@@ -320,18 +321,18 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 <p align="center">
   <!-- Row 1 -->
-  <a href="docs/media/img1.png" title="Cube decision — front">
-    <img src="docs/media/img1.png" width="45%" alt="Cube decision card (front)" />
+  <a href="https://github.com/ngvlamis/xgid2anki/blob/28560d2771f7ff2eb1b7729578c5cdfbcb35c1b9/docs/media/img1.png" title="cube decision — front">
+    <img src="https://github.com/ngvlamis/xgid2anki/blob/28560d2771f7ff2eb1b7729578c5cdfbcb35c1b9/docs/media/img1.png" width="45%" alt="Cube decision card (front)" />
   </a>
-  <a href="docs/media/img2.png" title="Cube decision — front">
-    <img src="docs/media/img2.png" width="45%" alt="Cube decision card (front)" />
+  <a href="https://github.com/ngvlamis/xgid2anki/blob/28560d2771f7ff2eb1b7729578c5cdfbcb35c1b9/docs/media/img2.png" title="Cube decision — front">
+    <img src="https://github.com/ngvlamis/xgid2anki/blob/28560d2771f7ff2eb1b7729578c5cdfbcb35c1b9/docs/media/img2.png" width="45%" alt="Cube decision card (front)" />
   </a>
   <br>
-  <a href="docs/media/img3.png" title="Cube decision — front">
-    <img src="docs/media/img3.png" width="45%" alt="Cube decision card (front)" />
+  <a href="https://github.com/ngvlamis/xgid2anki/blob/28560d2771f7ff2eb1b7729578c5cdfbcb35c1b9/docs/media/img3.png" title="Cube decision — front">
+    <img src="https://github.com/ngvlamis/xgid2anki/blob/28560d2771f7ff2eb1b7729578c5cdfbcb35c1b9/docs/media/img3.png" width="45%" alt="Cube decision card (front)" />
   </a>
-  <a href="docs/media/img5.png" title="Cube decision — front">
-    <img src="docs/media/img5.png" width="45%" alt="Cube decision card (front)" />
+  <a href="https://github.com/ngvlamis/xgid2anki/blob/28560d2771f7ff2eb1b7729578c5cdfbcb35c1b9/docs/media/img5.png" title="Cube decision — front">
+    <img src="https://github.com/ngvlamis/xgid2anki/blob/28560d2771f7ff2eb1b7729578c5cdfbcb35c1b9/docs/media/img5.png" width="45%" alt="Cube decision card (front)" />
   </a>
 </p>
 
@@ -340,7 +341,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 </p>
 
 > [!Note]
-> More screenshots (e.g., dark mode, mobile) can be found in [docs/media](docs/media).
+> More screenshots (e.g., dark mode, mobile) can be found in [docs/media](https://github.com/ngvlamis/xgid2anki/tree/main/docs/media).
 
 ---
 
@@ -357,6 +358,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
 ### 💬 Feedback
 
 Bug reports and feature suggestions are welcome on the  
-[GitHub Issues page](issues).
+[GitHub Issues page](https://github.com/ngvlamis/xgid2anki/issues).
 
 ---
