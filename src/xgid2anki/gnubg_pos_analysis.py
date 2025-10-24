@@ -19,9 +19,13 @@ Input (env):
 Output (single JSON document)
 """
 
-import os, sys, tempfile, StringIO, json
+import os, sys, tempfile, json
 from contextlib import contextmanager
 import gnubg  # REQUIRED when running under 'gnubg'
+try:
+    from StringIO import StringIO  # Py2
+except ImportError:
+    from io import StringIO        # Py3
 
 
 @contextmanager
@@ -66,7 +70,7 @@ def capture_fds():
 def run_with_no(func):
     """Run func once, answering 'no' if prompted; discard all output."""
     old_in = sys.stdin
-    sys.stdin = StringIO.StringIO("no\n")
+    sys.stdin = StringIO("no\n")
     try:
         with suppress_fds():
             return func()
@@ -80,7 +84,10 @@ def capture_output(func):
         func()
         buff.flush()
         buff.seek(0)
-        return buff.read()
+        data = buff.read()
+        if isinstance(data, bytes):
+            data = data.decode("utf-8", errors="replace")
+        return data
 
 
 def print_to_tty(msg):
