@@ -1,6 +1,6 @@
 [project]
 name = "xgid2anki"
-version = "0.1.0"
+version = "0.1.1"
 description = "Convert a list of backgammon XGIDs into an interactive Anki study deck."
 readme = "README-pypi.md"
 license = { text = "GPL-3.0-or-later" }
@@ -62,3 +62,9 @@ include = [
 # ------- uv niceties (optional) -------
 [tool.uv]
 index-url = "https://pypi.org/simple"
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
