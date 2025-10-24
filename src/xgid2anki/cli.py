@@ -449,14 +449,15 @@ def main(argv: List[str] | None = None) -> int:
     # Ensure chromium browswer installation for playwright
     try:
         ensure_headless_chromium()
-    except Exception:
-        return 1
+    except Exception as e:
+        logging.error(e)
+        return 78
 
     # Ensure a local and patched version of bglog exists
     try:
         bgpath = download_bglog()
     except Exception:
-        return 1
+        return 69
 
     # Load board theme, using any user defined theme attributes set in args
     try:
