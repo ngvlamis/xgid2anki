@@ -241,7 +241,7 @@ wheels = [
 
 [[package]]
 name = "xgid2anki"
-version = "0.1.1"
+version = "0.1.2"
 source = { editable = "." }
 dependencies = [
     { name = "genanki" },
@@ -255,7 +255,7 @@ dependencies = [
 requires-dist = [
     { name = "genanki" },
     { name = "platformdirs" },
-    { name = "playwright" },
+    { name = "playwright", specifier = ">=1.55.0" },
     { name = "pyyaml" },
     { name = "tqdm" },
 ]
