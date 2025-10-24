@@ -133,7 +133,7 @@ def parse_args(argv: List[str] | None = None) -> argparse.Namespace:
         help="Output directory or .apkg file (default: current working dir)",
     )
 
-    # Deck & Analysis Options 
+    # Deck & Analysis Options
     user_pref_group = parser.add_argument_group("Deck & Analysis Options")
     user_pref_group.add_argument(
         "-d",
