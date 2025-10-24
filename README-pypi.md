@@ -331,18 +331,18 @@ SPDX-License-Identifier: GPL-3.0-or-later
 
 <p align="center">
   <!-- Row 1 -->
-  <a href="https://github.com/ngvlamis/xgid2anki/blob/28560d2771f7ff2eb1b7729578c5cdfbcb35c1b9/docs/media/img1.png" title="cube decision — front">
-    <img src="https://github.com/ngvlamis/xgid2anki/blob/28560d2771f7ff2eb1b7729578c5cdfbcb35c1b9/docs/media/img1.png" width="45%" alt="Cube decision card (front)" />
+  <a href="https://raw.githubusercontent.com/ngvlamis/xgid2anki/main/docs/media/img1.png" title="cube decision — front">
+    <img src="https://raw.githubusercontent.com/ngvlamis/xgid2anki/main/docs/media/img1.png" width="45%" alt="Cube decision card (front)" />
   </a>
-  <a href="https://github.com/ngvlamis/xgid2anki/blob/28560d2771f7ff2eb1b7729578c5cdfbcb35c1b9/docs/media/img2.png" title="Cube decision — front">
-    <img src="https://github.com/ngvlamis/xgid2anki/blob/28560d2771f7ff2eb1b7729578c5cdfbcb35c1b9/docs/media/img2.png" width="45%" alt="Cube decision card (front)" />
+  <a href="https://raw.githubusercontent.com/ngvlamis/xgid2anki/main/docs/media/img2.png" title="Cube decision — front">
+    <img src="https://raw.githubusercontent.com/ngvlamis/xgid2anki/main/docs/media/img2.png" width="45%" alt="Cube decision card (front)" />
   </a>
   <br>
-  <a href="https://github.com/ngvlamis/xgid2anki/blob/28560d2771f7ff2eb1b7729578c5cdfbcb35c1b9/docs/media/img3.png" title="Cube decision — front">
-    <img src="https://github.com/ngvlamis/xgid2anki/blob/28560d2771f7ff2eb1b7729578c5cdfbcb35c1b9/docs/media/img3.png" width="45%" alt="Cube decision card (front)" />
+  <a href="https://raw.githubusercontent.com/ngvlamis/xgid2anki/main/docs/media/img3.png" title="Cube decision — front">
+    <img src="https://raw.githubusercontent.com/ngvlamis/xgid2anki/main/docs/media/img3.png" width="45%" alt="Cube decision card (front)" />
   </a>
-  <a href="https://github.com/ngvlamis/xgid2anki/blob/28560d2771f7ff2eb1b7729578c5cdfbcb35c1b9/docs/media/img5.png" title="Cube decision — front">
-    <img src="https://github.com/ngvlamis/xgid2anki/blob/28560d2771f7ff2eb1b7729578c5cdfbcb35c1b9/docs/media/img5.png" width="45%" alt="Cube decision card (front)" />
+  <a href="https://raw.githubusercontent.com/ngvlamis/xgid2anki/main/docs/media/img5.png" title="Cube decision — front">
+    <img src="https://raw.githubusercontent.com/ngvlamis/xgid2anki/main/docs/media/img5.png" width="45%" alt="Cube decision card (front)" />
   </a>
 </p>
 
