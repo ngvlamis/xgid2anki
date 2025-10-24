@@ -78,14 +78,11 @@ You need **Python ≥ 3.10**, **GNU Backgammon**, and a working **Playwright (he
 
 ---
 
-### Installing xgid2anki
+### ✅ Installing xgid2anki
 
-`xgid2anki` can be installed using any Python package manager that works with [PyPI](https://pypi.org). 
-Both Options 1 and 2 below automatically manage virtual environments and install `xgid2anki` in your system `PATH`.
+`xgid2anki` can be installed using any Python package manager that supports [PyPI](https://pypi.org). 
+We recommend Astral's [uv](https://docs.astral.sh/uv/), which installs `xgid2anki` as a global command-line tool.
 
-#### Option 1 – Using [uv](https://docs.astral.sh/uv/) *(recommended)*
-
-`uv` automatically creates an isolated environment and installs Python if necessary.
 
 ```bash
 # If you don't have uv yet:
@@ -95,41 +92,15 @@ Both Options 1 and 2 below automatically manage virtual environments and install
 uv tool install xgid2anki
 xgid2anki --help
 ```
+*(Users who prefer pip, pipx, or another tool can follow their usual process for installing packages from PyPI.)*
 
-#### Option 2 – Using [pipx](https://pypa.github.io/pipx/)
-
-```bash
-# If you don't have pipx yet:
-# macOS (Homebrew): brew install pipx && pipx ensurepath
-# Linux (pip): python -m pip install --user pipx && python -m pipx ensurepath
-# Windows (PowerShell): python -m pip install --user pipx && python -m pipx ensurepath
-# then restart your shell
-
-pipx install xgid2anki
-xgid2anki --help
-```
-> [!NOTE]
-> `pipx` installs `xgid2anki` in its own isolated virtual environment
-> and places only the command itself on your `PATH`.
-
-#### Option 3 – Using pip (global or venv)
-
-```bash
-python -m pip install --upgrade pip
-pip install xgid2anki
-xgid2anki --help
-```
-> [!WARNING]
-> Installing with `pip` uses the current environment.
-> Prefer `pipx` or `uv` for isolation and easier upgrades.
-
-#### Option 4 – From source
+#### 🧩 Installation from source using [uv](https://docs.astral.sh/uv/)
 
 ```bash
 # Choose a directory where the source should live:
 git clone https://github.com/ngvlamis/xgid2anki.git
 cd xgid2anki
-uv sync  # or: pip install -e .
+uv sync  
 ```
 
 ---
