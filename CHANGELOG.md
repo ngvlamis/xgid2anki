@@ -2,7 +2,6 @@
 All notable changes to this project will be documented in this file.
 
 ## [0.1.2] - 2025-10-24
-*(Test PyPI release)*
 
 ### Fixed
 - `ensure_headless_chromium`: fixed bug when Playwright was already installed.
