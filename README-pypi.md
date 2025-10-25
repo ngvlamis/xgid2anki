@@ -94,6 +94,12 @@ We recommend Astral's [uv](https://docs.astral.sh/uv/), which installs `xgid2ank
 uv tool install xgid2anki
 xgid2anki --help
 ```
+> 💡 **Tip**
+>
+> After installing uv, make sure it’s available on your PATH 
+> (follow the on-screen instructions from the installer, e.g. run `source ~/.local/bin/env` or restart your shell).
+
+
 *(Users who prefer pip, pipx, or another tool can follow their usual process for installing packages from PyPI.)*
 
 #### 🧩 Installation from source using [uv](https://docs.astral.sh/uv/)
@@ -113,7 +119,7 @@ xgid2anki will automatically attempt to install the Playwright headless browser 
 However, we recommend installing it manually to ensure all dependencies are in place:
 
 ```bash
-uv run playwright install --with-deps chromium-headless-shell
+uv tool run --from xgid2anki playwright install --with-deps chromium-headless-shell
 ```
 *(This command installs the lightweight “chromium-headless-shell” package used by Playwright for board rendering.)*
 
