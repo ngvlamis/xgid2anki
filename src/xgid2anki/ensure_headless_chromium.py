@@ -21,6 +21,7 @@ import platform
 import shutil
 import subprocess
 import sys
+from playwright.sync_api import sync_playwright
 
 logger = logging.getLogger(__name__)
 
@@ -31,15 +32,6 @@ def _can_launch_chromium() -> bool:
     Return False if Chromium isn't installed / not available.
     Raise RuntimeError if Playwright itself isn't importable.
     """
-    try:
-        from playwright.sync_api import sync_playwright  # type: ignore
-    except Exception as e:
-        # Playwright isn't even importable in this environment.
-        raise RuntimeError(
-            "Playwright is not available in this environment. "
-            "Reinstall xgid2anki so that it includes Playwright."
-        ) from e
-
     try:
         with sync_playwright() as p:
             # Try to launch Chromium and immediately close it.
@@ -66,27 +58,7 @@ def ensure_headless_chromium() -> None:
 
     logger.info("Chromium not found; attempting to install (one-time)…")
 
-    # Step 2: Attempt 1 — prefer uv if available.
-    uv_path = shutil.which("uv")
-    if uv_path is not None:
-        uv_args = [uv_path, "run", "playwright", "install", "chromium-headless-shell"]
-        if platform.system() == "Linux":
-            uv_args.append("--with-deps")
-
-        try:
-            subprocess.run(uv_args, check=True)
-            # Re-check after install
-            if _can_launch_chromium():
-                logger.info("Chromium is available for Playwright (installed via uv).")
-                return
-            else:
-                logger.debug("uv install ran, but Chromium still not launchable.")
-        except subprocess.CalledProcessError as e:
-            logger.debug("Chromium install via uv failed: %r", e)
-    else:
-        logger.debug("uv not found on PATH; skipping uv-based install attempt.")
-
-    # Step 3: Attempt 2 — fall back to current interpreter.
+    # Step 2: Attempt to install chromium
     py_args = [
         sys.executable,
         "-m",
@@ -124,15 +96,11 @@ def ensure_headless_chromium() -> None:
 
     manual_msg = (
         "Please run one of the following manually, then rerun xgid2anki:\n\n"
-        "    uv run playwright install chromium\n"
+        "    uv tool run --from xgid2anki playwright install --with-deps chromium-headless-shell\n"
     )
-    if platform.system() == "Linux":
-        manual_msg += "    uv run playwright install chromium --with-deps  # on Linux\n\n"
-    else:
-        manual_msg += "\n"
 
-    manual_msg += f"or:\n\n    {sys.executable} -m playwright install chromium\n"
-    if platform.system() == "Linux":
-        manual_msg += "    (add --with-deps on Linux)\n"
+    manual_msg += f"or:\n\n    {sys.executable} -m playwright install --with-deps chromium-headless-shell\n"
 
     logger.info(manual_msg)
+
+    raise ChromiumSetupError("Unable to install or launch Playwright Chromium.")
