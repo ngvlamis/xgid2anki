@@ -45,6 +45,11 @@ class ConfigError(Exception):
     pass
 
 
+class ChromiumSetupError(RuntimeError):
+    """Raised when Playwright's Chromium cannot be installed or launched."""
+    pass
+
+
 def load_yaml_config(cfg_path: Path) -> dict:
     """Load YAML config as a mapping.
 
