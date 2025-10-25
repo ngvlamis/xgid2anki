@@ -2,21 +2,24 @@
 # xgid2anki - Convert a set of backgammon XGIDs into an Anki study deck
 # Copyright (c) 2025 Nicholas G. Vlamis
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""xgid2anki.gnubg_pos_analysis (Python 2)
+"""xgid2anki.gnubg_pos_analysis 
 
 Runs **inside GNUBG** via::
 
-    XGIDS='["..."]' JSON_FD=3 PLIES=3 CUBE_PLIES=3 gnubg -t -q -p gnubg_pos_analysis.py
+    XGIDS='[\"...\"]' PLIES=3 CUBE_PLIES=3 RESULT_JSON_PATH='C:\\Temp\\gnubg_result_abc123.json' \\
++        gnubg -t -q -p gnubg_pos_analysis.py
 
 --------
 Input (env):
 - ``XGIDS``: JSON array of XGID strings.
 - ``PLIES``: integer search depth for moves (default: 3).
 - ``CUBE_PLIES``: integer search depth for cube (default: 3).
-- ``JSON_FD``: numeric file descriptor; if provided, the script writes a single
-  JSON payload to this FD. Otherwise, it writes to stdout.
+- ``RESULT_JSON_PATH``: path to a writable file where this script will dump
+  one JSON array of analysis objects.
 
-Output (single JSON document)
+Output:
+- A single JSON document is written to RESULT_JSON_PATH.
+  Nothing is guaranteed about stdout/stderr; they may contain GNUBG chatter.
 """
 
 import os, sys, tempfile, json
@@ -91,6 +94,12 @@ def capture_output(func):
 
 
 def print_to_tty(msg):
+    """
+    Best-effort progress message to a real terminal (useful during dev).
+    If /dev/tty doesn't exist (e.g. Windows, or no TTY), fall back to stdout.
+
+    NOTE: This is purely informational. The caller does NOT parse this.
+    """
     line = msg if msg.endswith("\n") else (msg + "\n")
     try:
         tty = open("/dev/tty", "w")
@@ -100,9 +109,32 @@ def print_to_tty(msg):
         finally:
             tty.close()
     except Exception:
-        # Fallback if no TTY
-        sys.stdout.write(line)
-        sys.stdout.flush()
+        try:
+            sys.stdout.write(line)
+            sys.stdout.flush()
+        except Exception:
+            pass
+    
+
+def write_result_json(result_obj):
+    """
+    Dump result_obj (JSON-serializable) to RESULT_JSON_PATH.
+    Exit with a nonzero code if RESULT_JSON_PATH is missing or unwritable.
+    """
+    out_path = os.environ.get("RESULT_JSON_PATH")
+    if not out_path:
+        # Hard failure: the parent promised us this.
+        sys.stderr.write("gnubg_pos_analysis: RESULT_JSON_PATH not set\n")
+        sys.stderr.flush()
+        sys.exit(1)
+
+    try:
+        with open(out_path, "w") as fp:
+            json.dump(result_obj, fp)
+    except Exception as e:
+        sys.stderr.write("gnubg_pos_analysis: failed to write JSON: %s\n" % e)
+        sys.stderr.flush()
+        sys.exit(1)
 
 
 if __name__ == "__main__":
@@ -132,20 +164,6 @@ if __name__ == "__main__":
 
         output.append({"xgid": xgid, "hint": hint_txt, "eval": eval_txt})
 
-    # Emit JSON to the dedicated FD if provided; else stdout
-    json_text = json.dumps(output)
-    json_fd_env = os.environ.get("JSON_FD")
-    if json_fd_env:
-        try:
-            fd = int(json_fd_env)
-            w = os.fdopen(fd, "w")
-            w.write(json_text)
-            w.flush()
-            w.close()
-        except Exception:
-            # Fallback to stdout if FD write fails
-            sys.stdout.write(json_text + "\n")
-            sys.stdout.flush()
-    else:
-        sys.stdout.write(json_text + "\n")
-        sys.stdout.flush()
+    # Write the full batch result for the parent process to consume
+    write_result_json(output)
+    # After this point, gnubg will exit and the parent will read+delete the file.

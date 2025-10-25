@@ -16,6 +16,7 @@ import os
 import json
 import subprocess
 import platform
+import tempfile
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
@@ -36,54 +37,77 @@ def split_into_n(seq, n):
 def run_gnubg_batch(indexed_batch, ply, cply):
     """Invoke GNUBG once for a batch of XGIDs."""
 
-    # Create a unidirectional pipe: GNUBG (child) writes JSON to *w_fd*;
-    # we (parent) read it from *r_fd*.
-    r_fd, w_fd = os.pipe()  # create pipe: parent reads r_fd, child writes w_fd
-
     indices = [i for (i, _) in indexed_batch]
     xgids = [x for (_, x) in indexed_batch]
 
-    # Build env for the child process (GNUBG)
+
+    # 1. Create a temporary file path for GNUBG to write machine-readable JSON.
+    tmp = tempfile.NamedTemporaryFile(
+        delete=False,
+        prefix="gnubg_result_",
+        suffix=".json",
+    )
+    tmp_path = tmp.name
+    tmp.close()  # child (gnubg) will open this path itself
+
+    # 2. Build environment for the child process (GNUBG).
+    #    We tell gnubg_pos_analysis.py:
+    #      - which XGIDs to analyze
+    #      - ply / cube_plies depth settings
+    #      - where to write the final JSON bundle
     env = os.environ.copy()
     env["XGIDS"] = json.dumps(xgids)
-    env["JSON_FD"] = str(w_fd)
     env["PLIES"] = str(ply)
     env["CUBE_PLIES"] = str(cply)
+    env["RESULT_JSON_PATH"] = tmp_path
 
-    # Get path of gnubg script
-    gnubg_script = Path(__file__).parent / "gnubg_pos_analysis.py"
-
-    # Determine correct command to call GNU Backgammon (system dependent)
+    # 3. Work out which gnubg binary to call.
+    #    On Windows we expect gnubg-cli.exe / gnubg-cli in PATH.
+    #    On Unix-y systems we expect gnubg to be callable.
     system = platform.system().lower()
-
     if system == "windows":
         gnubg_command = "gnubg-cli"
     else:
         gnubg_command = "gnubg"
 
+    gnubg_script = Path(__file__).parent / "gnubg_pos_analysis.py"
     gnubg_args = [gnubg_command, "-t", "-q", "-p", gnubg_script]
 
-    # Run script inside gnubg
-    p = subprocess.Popen(
-        gnubg_args,
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        pass_fds=(w_fd,),
-        bufsize=1,
-        text=True,
-    )
-    # Close opened pipe
-    os.close(w_fd)
+    # 4. Launch GNUBG. We still capture stdout/stderr (merged) to `out`
+    #    in case we want to log/debug it, but we DO NOT try to parse it.
+    completed = None
+    analysis = None
+    try:
+        completed = subprocess.run(
+            gnubg_args,
+            env=env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            check=False,
+        )
 
-    # Read the JSON from the pipe our child writes to.
-    with os.fdopen(r_fd, "r") as rfile:
-        json_text = rfile.read()
+        #
+        # 5. Read the structured analysis that gnubg_pos_analysis.py
+        #    should have written to tmp_path as valid JSON.
+        #
+        with open(tmp_path, "r", encoding="utf-8") as f:
+            analysis = json.load(f)
 
-    analysis = json.loads(json_text)
+    finally:
+        # 6. Cleanup temp file no matter what.
+        try:
+            os.remove(tmp_path)
+        except OSError:
+            pass
 
-    out, err = p.communicate()
-    return p.returncode, analysis, out, err, indices, xgids
+    # 7. Return the same shape analyze_positions() already expects:
+    #    (returncode, analysis_obj, out, indices, xgids_batch)
+    #
+    # We no longer distinguish stdout/stderr, so:
+    out = completed.stdout if completed is not None else ""
+    err = None  # kept for API compatibility with caller
+    return completed.returncode, analysis, out, indices, xgids
 
 
 def analyze_positions(xgids, procs=0, plies=3, cube_plies=3):
@@ -103,7 +127,7 @@ def analyze_positions(xgids, procs=0, plies=3, cube_plies=3):
     with ProcessPoolExecutor(max_workers=procs) as ex:
         futs = [ex.submit(run_gnubg_batch, b, plies, cube_plies) for b in batches]
         for fut in as_completed(futs):
-            rcode, analysis, out, err, indices, xgids_batch = fut.result()
+            rcode, analysis, out, indices, xgids_batch = fut.result()
             if rcode != 0 and rc == 0:
                 rc = rcode
 
