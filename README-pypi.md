@@ -107,21 +107,15 @@ uv sync
 
 ---
 
-### One-time setup for headless Chromium
+### 🧭 One-time setup for headless Chromium
 
-xgid2anki will automatically install the Playwright headless browser on first run.
-If you prefer, you can install it manually:
+xgid2anki will automatically attempt to install the Playwright headless browser on first run.
+However, we recommend installing it manually to ensure all dependencies are in place:
 
 ```bash
-# Install Chromium with all required dependencies:
 uv run playwright install --with-deps chromium-headless-shell
-
-# or (if installed via pipx):
-pipx run playwright install --with-deps chromium-headless-shell
-
-# or (if installed via pip):
-playwright install --with-deps chromium-headless-shell
 ```
+*(This command installs the lightweight “chromium-headless-shell” package used by Playwright for board rendering.)*
 
 ---
 
