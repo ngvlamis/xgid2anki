@@ -15,6 +15,7 @@ Intended to be called from :func:`xgid2anki.pipeline.xgid2anki_pipeline`; emits 
 import os
 import json
 import subprocess
+import platform
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
@@ -52,7 +53,15 @@ def run_gnubg_batch(indexed_batch, ply, cply):
     # Get path of gnubg script
     gnubg_script = Path(__file__).parent / "gnubg_pos_analysis.py"
 
-    gnubg_args = ["gnubg", "-t", "-q", "-p", gnubg_script]
+    # Determine correct command to call GNU Backgammon (system dependent)
+    system = platform.system().lower()
+
+    if system == "windows":
+        gnubg_command = "gnubg-cli"
+    else:
+        gnubg_command = "gnubg"
+
+    gnubg_args = [gnubg_command, "-t", "-q", "-p", gnubg_script]
 
     # Run script inside gnubg
     p = subprocess.Popen(

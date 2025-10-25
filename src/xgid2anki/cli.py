@@ -24,6 +24,7 @@ import logging
 import sys
 import shutil
 import json
+import platform
 from pathlib import Path
 from typing import Iterable, List, Tuple
 
@@ -226,11 +227,35 @@ def ensure_gnubg_is_installed():
     Check if GNU Backgammon is installed, exit if not.
     """
 
-    if shutil.which("gnubg") is not None:
-        logging.info("GNU Backgammon (gnubg) found.")
+    system = platform.system().lower()
+
+    if system == "windows":
+        gnubg_command = "gnubg-cli"
+        error_msg = r"""
+
+ERROR: GNU Backgammon command-line tool (gnubg-cli.exe) was not found.
+
+On Windows, gnubg-cli.exe is separate from the GUI app (gnubg.exe)
+and is not always on your PATH by default.
+
+Fix:
+  1. Locate gnubg-cli.exe (often here):
+     C:\Users\<username>\AppData\Local\gnubg\gnubg-cli.exe
+  2. Add that folder to your PATH in PowerShell:
+     setx PATH "$($env:PATH);C:\Users\<username>\AppData\Local\gnubg"
+  3. Reopen PowerShell and run:
+     gnubg-cli --help
+"""
+    else:
+        gnubg_command = "gnubg"
+        error_msg = ""
+    
+    path = shutil.which(gnubg_command)
+    if path:
+        logging.info(f"GNU Backgammon found: {path}")
     else:
         raise SystemExit(
-            "ERROR: GNU Backgammon (gnubg) not found in PATH. Please install it first."
+            f"ERROR: GNU Backgammon not found in PATH. Please install it first.{error_msg}"
         )
 
 
