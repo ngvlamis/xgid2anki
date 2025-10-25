@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.1.4] - 2025-10-24
+### Changed
+- `cli.py`: added custom exception class for playwright browswer error
+- `ensure_headless_chromium`: removed unnecessary checks and an incorrect installation attempt
+- Corrected README instructions for installing headless chromium browswer
+- Updated REAMDE to include note regarding adding uv to `PATH` variable
+
 ## [0.1.3] - 2025-10-24
 ### Fixed
 - Updated PyPI README formatting and image links.
