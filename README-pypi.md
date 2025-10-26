@@ -55,30 +55,42 @@ You need **Python ≥ 3.10**, **GNU Backgammon**, and a working **Playwright (he
 #### Installing GNU Backgammon
 
 - **macOS:**  
+  The recommended method is via **MacPorts**.
+  If you do not have MacPorts installed, please [download and install it here](https://www.macports.org/install.php).
 
-  The recommended method is via **MacPorts**:
   ```bash
   sudo port install gnubg
   ```
 
 - **Linux (Debian/Ubuntu):**
-
   ```bash
   sudo apt install gnubg
   ```
 
-- **Windows:**
-
-  Download and install the latest build from [https://www.gnu.org/software/gnubg/#TOCdownloading](https://www.gnu.org/software/gnubg/).
+- **Windows:**  
+  Download and install the latest Windows build from the [GNU Backgammon website](https://www.gnu.org/software/gnubg/#TOCdownloading).
 
 > 💡 **Tip**
 >
-> You can verify your installation by running:
-> `gnubg --version`
-> You should see the version number printed without errors.
+> On Windows, GNU Backgammon’s command-line tool (`gnubg-cli.exe`) is **separate** from the GUI app (`gnubg.exe`) and is not added to your PATH automatically.  
+> You must add it manually:
+> 
+> 1. Locate the installation folder (typically):  
+>    ```powershell
+>    C:\Users\<username>\AppData\Local\gnubg
+>    # or equivalently
+>    $env:LOCALAPPDATA\gnubg
+>    ```
+> 2. Add that folder to your PATH in PowerShell:  
+>    ```powershell
+>    setx PATH "$($env:PATH);C:\Users\<username>\AppData\Local\gnubg"
+>    ```
+> 3. Close and reopen PowerShell, then verify the CLI is accessible:  
+>    ```powershell
+>    gnubg-cli --help
+>    ```
+> If successful, you’ll see GNU Backgammon’s command-line help output, confirming it’s now available system-wide.
 
-
----
 
 ### ✅ Installing xgid2anki
 
