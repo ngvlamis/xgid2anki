@@ -159,6 +159,8 @@ if __name__ == "__main__":
         run_with_no(lambda: gnubg.command("set xgid %s" % xgid))
 
         # Capture hint/eval (both stdout & stderr from gnubg during the call)
+        # First start with a warm-up / burn out, which is required for Windows
+        capture_output(lambda: gnubg.command("hint"))
         hint_txt = capture_output(lambda: gnubg.command("hint"))
         eval_txt = capture_output(lambda: gnubg.command("eval"))
 
