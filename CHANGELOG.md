@@ -1,7 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
- ## [0.1.5] – 2025-10-25
+## [0.1.6] - 2025-10-26
+### Fixed
+- Corrected a typo in Anki card template text
+
+## [0.1.5] – 2025-10-25
 ### Added
 - Full **Windows compatibility** for GNU Backgammon analysis:  
   - `xgid2anki.analyze_positions` now uses **temporary files** for structured data exchange instead of Unix-only pipes (`pass_fds`).  
