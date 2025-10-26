@@ -22,7 +22,7 @@ Output:
   Nothing is guaranteed about stdout/stderr; they may contain GNUBG chatter.
 """
 
-import os, sys, tempfile, json
+import os, sys, tempfile, json, platform
 from contextlib import contextmanager
 import gnubg  # REQUIRED when running under 'gnubg'
 try:
@@ -95,25 +95,44 @@ def capture_output(func):
 
 def print_to_tty(msg):
     """
-    Best-effort progress message to a real terminal (useful during dev).
-    If /dev/tty doesn't exist (e.g. Windows, or no TTY), fall back to stdout.
+    Best-effort progress message for humans ("Analyzing ...").
+    On Unix: try /dev/tty first (so we bypass suppressed/redirected fds).
+    On Windows (or if /dev/tty fails): fall back to real stdout if possible.
 
-    NOTE: This is purely informational. The caller does NOT parse this.
+    Nothing here is parsed by the parent process.
     """
+    # Make sure we always end with a newline
     line = msg if msg.endswith("\n") else (msg + "\n")
-    try:
-        tty = open("/dev/tty", "w")
+
+    system = platform.system().lower()
+
+    if system != "windows":
+        # Try to write directly to the controlling terminal on POSIX.
         try:
-            tty.write(line)
-            tty.flush()
-        finally:
-            tty.close()
-    except Exception:
-        try:
-            sys.stdout.write(line)
-            sys.stdout.flush()
+            tty = open("/dev/tty", "w")
+            try:
+                tty.write(line)
+                tty.flush()
+                return
+            finally:
+                tty.close()
         except Exception:
+            # If /dev/tty doesn't exist or isn't writable, fall through below.
             pass
+
+    # Fallback: try the interpreter's "real" stdout first (__stdout__),
+    # then the possibly reassigned sys.stdout.
+    for stream in (getattr(sys, "__stdout__", None), getattr(sys, "stdout", None)):
+        if stream:
+            try:
+                stream.write(line)
+                stream.flush()
+                return
+            except Exception:
+                pass
+
+    # Last resort: do nothing. Failing to print progress should not kill analysis.
+    return
     
 
 def write_result_json(result_obj):
