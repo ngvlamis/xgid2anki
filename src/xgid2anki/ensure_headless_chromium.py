@@ -21,6 +21,7 @@ import platform
 import subprocess
 import sys
 from playwright.sync_api import sync_playwright
+from .errors import ChromiumSetupError
 
 logger = logging.getLogger(__name__)
 
