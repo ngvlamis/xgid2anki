@@ -18,7 +18,6 @@ logging is configured in the main CLI.
 
 import logging
 import platform
-import shutil
 import subprocess
 import sys
 from playwright.sync_api import sync_playwright
