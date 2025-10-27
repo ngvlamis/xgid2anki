@@ -8,3 +8,6 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Personal files
+to-do.md
