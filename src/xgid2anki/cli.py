@@ -33,22 +33,12 @@ from .validate_xgid import validate_xgid
 from .download_bglog import download_bglog
 from .pipeline import xgid2anki_pipeline
 from .ensure_headless_chromium import ensure_headless_chromium
+from .errors import ConfigError
 
 try:
     import yaml  # optional, only needed if --config is used
 except Exception:  # pragma: no cover
     yaml = None
-
-
-class ConfigError(Exception):
-    """Raised when there is an error loading or parsing the user files specified in the config."""
-
-    pass
-
-
-class ChromiumSetupError(RuntimeError):
-    """Raised when Playwright's Chromium cannot be installed or launched."""
-    pass
 
 
 def load_yaml_config(cfg_path: Path) -> dict:
@@ -249,7 +239,7 @@ Fix:
     else:
         gnubg_command = "gnubg"
         error_msg = ""
-    
+
     path = shutil.which(gnubg_command)
     if path:
         logging.info(f"GNU Backgammon found: {path}")
