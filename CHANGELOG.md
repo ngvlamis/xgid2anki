@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.1.7] - 2025-10-27
+## [0.1.3] - 2025-10-27
+### Fixed
+- Fixed board orientation so the player on roll is always on bottom (auto-flip if XGID shows otherwise)
+- Fixed issue where boards did not display on Android devices
+- Removed unused `err` variable from `analyze_positions.py`
+- Removed unnecessary `import shutil` from `ensure_headless_chromium.py`
+
+### Added
+- Added `errors.py` module defining custom exceptions and imported where needed
+
 ## [0.1.6] - 2025-10-26
 ### Fixed
 - Corrected a typo in Anki card template text

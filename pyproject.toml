@@ -1,6 +1,6 @@
 [project]
 name = "xgid2anki"
-version = "0.1.6"
+version = "0.1.7"
 description = "Convert a list of backgammon XGIDs into an interactive Anki study deck."
 readme = "README-pypi.md"
 license = { text = "GPL-3.0-or-later" }
