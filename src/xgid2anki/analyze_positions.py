@@ -103,10 +103,9 @@ def run_gnubg_batch(indexed_batch, ply, cply):
 
     # 7. Return the same shape analyze_positions() already expects:
     #    (returncode, analysis_obj, out, indices, xgids_batch)
-    #
-    # We no longer distinguish stdout/stderr, so:
+
     out = completed.stdout if completed is not None else ""
-    err = None  # kept for API compatibility with caller
+
     return completed.returncode, analysis, out, indices, xgids
 
 
