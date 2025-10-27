@@ -140,9 +140,15 @@ def xgid2svg(boards, bglog_path, theme):
                         el.bglog.currentTheme[key] = value;
                     }
                     el.bglog.redraw();
+                    // Remove animation for swapping sides
+                    el.bglog.swapSidesDuration=0;
                 }""",
                 theme,
             )
+
+            # We will always keep player on turn on the bottom
+            # Iniatilize with the assumption that the player on turn is on the bottom
+            current_orientation = 1
 
             for board in tqdm(boards, desc="Generating board images"):
                 xgid = board[0]
@@ -152,6 +158,7 @@ def xgid2svg(boards, bglog_path, theme):
                     f"document.getElementById('bglogContainer').bglog.loadXgId('{xgid}')"
                 )
 
+                
                 # Check if there are arrows to draw, and if so, draw them
                 if len(board) > 1:
                     arrows = " ".join(sanitize_movelist(board[1]))
@@ -166,8 +173,23 @@ def xgid2svg(boards, bglog_path, theme):
                 else:
                     arrows = None
 
-                # Wait a bit for rendering
-                # page.wait_for_timeout(600)
+
+                # Make sure player on roll is shown at the bottom of the board
+                new_orientation = int(xgid.split(':')[3])
+
+                if new_orientation != current_orientation:
+                    current_orientation = new_orientation
+                    page.evaluate(
+                        """
+                        const el = document.getElementById("bglogContainer");
+                        // swapSides flips which checkers are top/bottom
+                        el.bglog.swapSides();
+                        // toggleDirection flips bearoff direction so pips point the right way
+                        el.bglog.toggleDirection();
+                        // swapColors swaps the colors, so white is on roll
+                        el.bglog.swapColors();
+                        """
+                    )
 
                 # Ask the controller for an SVG blob and return it as base64
                 b64 = page.evaluate(
