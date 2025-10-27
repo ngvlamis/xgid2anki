@@ -25,10 +25,11 @@ Output:
 import os, sys, tempfile, json, platform
 from contextlib import contextmanager
 import gnubg  # REQUIRED when running under 'gnubg'
+
 try:
     from StringIO import StringIO  # Py2
 except ImportError:
-    from io import StringIO        # Py3
+    from io import StringIO  # Py3
 
 
 @contextmanager
@@ -133,7 +134,7 @@ def print_to_tty(msg):
 
     # Last resort: do nothing. Failing to print progress should not kill analysis.
     return
-    
+
 
 def write_result_json(result_obj):
     """

@@ -40,7 +40,6 @@ def run_gnubg_batch(indexed_batch, ply, cply):
     indices = [i for (i, _) in indexed_batch]
     xgids = [x for (_, x) in indexed_batch]
 
-
     # 1. Create a temporary file path for GNUBG to write machine-readable JSON.
     tmp = tempfile.NamedTemporaryFile(
         delete=False,

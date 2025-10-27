@@ -158,7 +158,6 @@ def xgid2svg(boards, bglog_path, theme):
                     f"document.getElementById('bglogContainer').bglog.loadXgId('{xgid}')"
                 )
 
-                
                 # Check if there are arrows to draw, and if so, draw them
                 if len(board) > 1:
                     arrows = " ".join(sanitize_movelist(board[1]))
@@ -173,9 +172,8 @@ def xgid2svg(boards, bglog_path, theme):
                 else:
                     arrows = None
 
-
                 # Make sure player on roll is shown at the bottom of the board
-                new_orientation = int(xgid.split(':')[3])
+                new_orientation = int(xgid.split(":")[3])
 
                 if new_orientation != current_orientation:
                     current_orientation = new_orientation
