@@ -2,7 +2,10 @@
 All notable changes to this project will be documented in this file.
 
 ## [0.1.7] - 2025-10-27
-## [0.1.3] - 2025-10-27
+### Fixed
+- Missing `errors.py` error
+
+## [0.1.7] - 2025-10-27
 ### Fixed
 - Fixed board orientation so the player on roll is always on bottom (auto-flip if XGID shows otherwise)
 - Fixed issue where boards did not display on Android devices
