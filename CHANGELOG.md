@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 ## [0.1.9] - unreleased
 ### Changed
 - bglog now supports away-style scores natively; removed JS patching from `download_bglog.py` and updated default theme to use `scoreStyle: awayalpha`
-- Existing cached `bglog.js` files containing old patches are automatically replaced on next run
+- `bglog.js` is now re-downloaded automatically whenever xgid2anki is updated, keeping the bglog build in sync with each release
 - `__version__` is now read dynamically from package metadata, keeping `pyproject.toml` as the single source of truth
 
 ### Fixed
