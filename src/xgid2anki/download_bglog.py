@@ -7,10 +7,9 @@ Responsible for retrieving the upstream `bglog.js` file used by the board render
 and saving the result into a per-user application data directory determined by
 `platformdirs.user_data_dir(APP_NAME)`.
 
-- Safe to call multiple times; re-downloads only when needed or force=True.
-- If the cached file contains old xgid2anki score-display patches (no longer needed
-  since bglog natively supports away-style scores via the scoreStyle theme setting),
-  a fresh download is triggered automatically.
+bglog.js is re-downloaded whenever the installed xgid2anki version changes, ensuring
+the bundled bglog build stays in sync with each release.
+
 - Raises on network/IO errors; the temp file is cleaned up on failure.
 """
 
@@ -20,6 +19,7 @@ import contextlib
 import logging
 import shutil
 import urllib.request
+from importlib.metadata import version as pkg_version
 from pathlib import Path
 
 from platformdirs import user_data_dir
@@ -31,9 +31,7 @@ from platformdirs import user_data_dir
 APP_NAME = "xgid2anki"
 _BGLOG_URL = "https://nt.bglog.org/bglog/index.js"
 _BGLOG_FILENAME = "bglog.js"
-
-# Presence of this string indicates an old patched file that should be replaced.
-_LEGACY_PATCH_MARKER = "matchLength - this.oppScore)+'A'"
+_VERSION_FILENAME = ".bglog_xgid2anki_version"
 
 logger = logging.getLogger(__name__)
 
@@ -48,46 +46,61 @@ def _format_size(nbytes: int) -> str:
 
 def get_bglog_path() -> Path:
     """Canonical location for bglog.js in the per-user data directory."""
-    data_dir = Path(
-        user_data_dir(APP_NAME)
-    )  # e.g. macOS: ~/Library/Application Support/xgid2anki
+    data_dir = Path(user_data_dir(APP_NAME))
     data_dir.mkdir(parents=True, exist_ok=True)
     return data_dir / _BGLOG_FILENAME
 
 
-def _is_legacy_patched(js_text: str) -> bool:
-    """Return True if the file contains the old xgid2anki away-score patches."""
-    return _LEGACY_PATCH_MARKER in js_text
+def _current_app_version() -> str:
+    try:
+        return pkg_version(APP_NAME)
+    except Exception:
+        return "unknown"
+
+
+def _cached_bglog_version(bglog_path: Path) -> str | None:
+    """Return the xgid2anki version that last downloaded bglog.js, or None."""
+    version_file = bglog_path.parent / _VERSION_FILENAME
+    try:
+        return version_file.read_text(encoding="utf-8").strip()
+    except Exception:
+        return None
+
+
+def _write_bglog_version(bglog_path: Path) -> None:
+    version_file = bglog_path.parent / _VERSION_FILENAME
+    version_file.write_text(_current_app_version(), encoding="utf-8")
 
 
 def download_bglog(force: bool = False) -> Path:
     """
     Ensure bglog.js exists at the canonical per-user data dir.
-    Re-downloads if missing, forced, or if the cached file is an old patched version.
-    Returns the final Path.
+    Re-downloads if missing, forced, or if xgid2anki has been updated since
+    the last download. Returns the final Path.
     """
     out_path = get_bglog_path()
+    app_version = _current_app_version()
 
     if out_path.exists() and not force:
-        try:
-            text = out_path.read_text(encoding="utf-8")
-            if _is_legacy_patched(text):
-                logger.info(
-                    "Cached bglog.js contains old score-display patches; "
-                    "re-downloading latest version…"
-                )
-            else:
-                logger.info("Found existing bglog.js at %s", out_path)
-                return out_path
-        except Exception as e:
-            logger.warning("Could not read cached bglog.js: %s — re-downloading…", e)
+        cached_version = _cached_bglog_version(out_path)
+        if cached_version == app_version:
+            logger.info("Found existing bglog.js at %s", out_path)
+            return out_path
+        elif cached_version is None:
+            logger.info("No version marker found for cached bglog.js; re-downloading…")
+        else:
+            logger.info(
+                "xgid2anki updated (%s → %s); re-downloading bglog.js…",
+                cached_version,
+                app_version,
+            )
 
     logger.info("Downloading bglog.js…")
 
     tmp_path = out_path.with_suffix(".download")
     try:
         req = urllib.request.Request(
-            _BGLOG_URL, headers={"User-Agent": "xgid2anki/1.0"}
+            _BGLOG_URL, headers={"User-Agent": f"xgid2anki/{app_version}"}
         )
         with (
             urllib.request.urlopen(req, timeout=30) as resp,
@@ -100,6 +113,7 @@ def download_bglog(force: bool = False) -> Path:
 
         out_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(tmp_path, out_path)
+        _write_bglog_version(out_path)
         logger.info("Saved bglog.js to %s", out_path)
         return out_path
 

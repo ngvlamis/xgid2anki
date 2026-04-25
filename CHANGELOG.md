@@ -2,14 +2,21 @@
 All notable changes to this project will be documented in this file.
 
 ## [0.1.9] - unreleased
+### Changed
+- bglog now supports away-style scores natively; removed JS patching from `download_bglog.py` and updated default theme to use `scoreStyle: awayalpha`
+- Existing cached `bglog.js` files containing old patches are automatically replaced on next run
+- `__version__` is now read dynamically from package metadata, keeping `pyproject.toml` as the single source of truth
+
 ### Fixed
 - Positional arguments (e.g. `xgid2anki positions.txt`) were silently ignored; input is now correctly merged with `-i/--input`
 - Hard-coded local HTTP server port 8877 replaced with OS-assigned port to avoid conflicts
 - `parse_cube_hint` could raise an uninformative `UnboundLocalError` if gnubg output was unexpected; now raises a clear `ValueError` caught gracefully in the pipeline
 - Anki model schema version constants (`MOVE_MODEL_SCHEMA`, `CUBE_MODEL_SCHEMA`) were defined but not used; model IDs are now derived from the correct per-model constants
-- `__version__` in `__init__.py` is now read dynamically from package metadata, keeping `pyproject.toml` as the single source of truth
 - Typo in XGID validation error message ("Ivalid" → "Invalid")
 - Typo in output path error message ("ouput" → "output")
+
+### Note
+- Custom themes using the old `awayStyle` key will need to be updated to use `scoreStyle: awayalpha` (or `away` / `absolute`)
 
 ## [0.1.7] - 2025-10-27
 ### Fixed
