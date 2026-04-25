@@ -2,7 +2,7 @@
   "animateSpeed": 0,
   "arrowFillColor": "#000000",
   "arrowStrokeColor": "#FFFFFF",
-  "awayStyle": true,
+  "scoreStyle": "awayalpha",
   "barColor": "#FFFFFF",
   "boardShadows": true,
   "borderColor": "#000000",
