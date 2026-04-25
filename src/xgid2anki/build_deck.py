@@ -49,11 +49,9 @@ MOVE_MODEL_SCHEMA = "v1"
 CUBE_MODEL_SCHEMA = "v1"
 
 # ---- IDs ----
-MODEL_NAME = "BG • Demo Model"
-MODEL_SCHEMA = "v1"
-CUBE_MODEL_ID = stable_model_id(CUBE_MODEL_NAME, schema_version=MODEL_SCHEMA)
-MOVE_MODEL_ID = stable_model_id(MOVE_MODEL_NAME, schema_version=MODEL_SCHEMA)
-TAKEPASS_MODEL_ID = stable_model_id(TAKEPASS_MODEL_NAME, schema_version=MODEL_SCHEMA)
+CUBE_MODEL_ID = stable_model_id(CUBE_MODEL_NAME, schema_version=CUBE_MODEL_SCHEMA)
+MOVE_MODEL_ID = stable_model_id(MOVE_MODEL_NAME, schema_version=MOVE_MODEL_SCHEMA)
+TAKEPASS_MODEL_ID = stable_model_id(TAKEPASS_MODEL_NAME, schema_version=CUBE_MODEL_SCHEMA)
 
 
 # ---- Define a note types (models) for Move and Cube decisions ----

@@ -98,7 +98,11 @@ def xgid2anki_pipeline(
 
     # Parse GNUBG analysis into useable dictionary
     logger.info("Parsing GNUBG analysis.")
-    position_data = parse_gnubg_eval(gnubg_analysis)
+    try:
+        position_data = parse_gnubg_eval(gnubg_analysis)
+    except ValueError as e:
+        logger.error("Failed to parse gnubg output: %s", e)
+        return 1
 
     # Generate iterable consisting of xgids together with arrow data for move positions
     xgids_w_arrows = generate_arrows(position_data)

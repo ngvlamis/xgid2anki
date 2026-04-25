@@ -346,7 +346,7 @@ def determine_out_path(out_path: Path | None) -> Path:
     if out_path:
         if not out_path.exists() or not out_path.is_dir():
             logging.error(
-                "ERROR: Specified path for ouput is invalid (given path: %s).", out_path
+                "ERROR: Specified path for output is invalid (given path: %s).", out_path
             )
             out_msg = "Continue with saving package in current directory?"
             if prompt_yes_no(out_msg, True):
@@ -493,9 +493,10 @@ def main(argv: List[str] | None = None) -> int:
         logging.error(str(e))
         return 2
 
-    # Collect candidates
-    if args.input:
-        candidates = detect_and_collect(args.input)
+    # Collect candidates — merge positional args with -i/--input
+    all_inputs = list(args.paths_or_xgids or []) + list(args.input or [])
+    if all_inputs:
+        candidates = detect_and_collect(all_inputs)
         deck_name = prompt_for_deck_name(args.deck_name)  # ← ensures re-prompt if empty
     else:
         candidates, deck_name = interactive_prompt(deck_name=args.deck_name)

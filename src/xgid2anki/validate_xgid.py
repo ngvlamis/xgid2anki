@@ -125,7 +125,7 @@ def validate_xgid(xgid: str) -> Tuple[str, List[str]]:
             if parts[7] not in {"0", "1"}:
                 errors.append("Invalid Crawford setting (Field 8).")
             elif parts[7] == "1" and scores_ok and max(su, st) != ml - 1:
-                errors.append("Ivalid match score for Crawford setting (Field 8).")
+                errors.append("Invalid match score for Crawford setting (Field 8).")
 
     # Field 10 (max cube)
     if not is_nonnegative_int(parts[9]):

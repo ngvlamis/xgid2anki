@@ -31,12 +31,23 @@ def parse_cube_hint(position, decision_type):
     # Grab the emg values for no double and double/take
     # (these are ordered in the gnubg eval by value)
     decisions = eval_paragraphs[2].splitlines()
+    nd = None
+    dt = None
     for j in range(4, 7):
         cube_line = decisions[j].split()
         if cube_line[1] == "No":
             nd = float(cube_line[3])
         elif cube_line[2] == "take":
             dt = float(cube_line[3])
+
+    if dt is None:
+        raise ValueError(
+            f"Could not parse 'Double, take' equity from gnubg output for XGID {position['xgid']!r}."
+        )
+    if decision_type == "00" and nd is None:
+        raise ValueError(
+            f"Could not parse 'No double' equity from gnubg output for XGID {position['xgid']!r}."
+        )
 
     # Next, we parse the evaluation, obtaining
     # player win chances, player gammon chances, player backgammon chances,

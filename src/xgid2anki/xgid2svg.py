@@ -78,7 +78,7 @@ def start_http_server(directory: Path):
         def log_message(self, format, *args):
             pass  # Suppress all logging
 
-    httpd = ThreadingHTTPServer(("127.0.0.1", 8877), Handler)
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
     t = threading.Thread(target=httpd.serve_forever, daemon=True)
     logger.info("Starting local http server to run bglog …")
     t.start()
@@ -111,8 +111,9 @@ def xgid2svg(boards, bglog_path, theme):
 
     # Start local server to avoid CORS/module issues
     httpd = start_http_server(folder)
+    port = httpd.server_address[1]
 
-    url = "http://127.0.0.1:8877/.temporary.html"
+    url = f"http://127.0.0.1:{port}/.temporary.html"
 
     try:
         with sync_playwright() as pw:
