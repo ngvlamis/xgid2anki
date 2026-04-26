@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [0.1.9] - unreleased
+## [0.1.9] - 2026-04-25
 ### Changed
 - bglog now supports away-style scores natively; removed JS patching from `download_bglog.py` and updated default theme to use `scoreStyle: awayalpha`
 - `bglog.js` is now re-downloaded automatically whenever xgid2anki is updated, keeping the bglog build in sync with each release

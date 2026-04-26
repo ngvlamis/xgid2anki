@@ -279,9 +279,9 @@ You can create your own visual theme directly on the [bglog website](https://nt.
 
 ## 🌐 First-Run Download
 
-On first launch, `xgid2anki` automatically downloads a local copy of `index.js` from [bglog](https://nt.bglog.org/NT.html) — the JavaScript library used to draw backgammon boards.
-**A network connection is required only once.**  
-The file is then cached locally (via `platformdirs`) for offline use in later runs.  
+On first launch, `xgid2anki` automatically downloads a local copy of `bglog.js` from [bglog](https://nt.bglog.org/NT.html) — the JavaScript library used to draw backgammon boards.
+The file is cached locally (via `platformdirs`) and reused on subsequent runs.
+It will be re-downloaded automatically whenever `xgid2anki` is updated to a new version.
 
 ---
 
