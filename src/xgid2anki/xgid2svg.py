@@ -26,6 +26,7 @@ import re
 import unicodedata
 import threading
 import logging
+import xml.etree.ElementTree as ET
 from tqdm import tqdm
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
@@ -68,6 +69,45 @@ def sanitize_movelist(movelist):
                 # If a normal chain, keep as is
                 arrow_list.append(move)
     return arrow_list
+
+
+def create_arrow_overlay(base_svg_bytes: bytes, arrow_svg_bytes: bytes) -> bytes:
+    """Return an SVG containing only elements added by the arrow render vs the bare board.
+
+    Compares each direct child of the SVG root by serialized form.  Any child
+    present in the arrow SVG but absent in the base SVG is included in the
+    overlay.  The overlay has the same viewBox/dimensions as the originals but
+    no opaque background, so it can be CSS-stacked on top of the base board.
+
+    Falls back to returning the full arrow SVG unchanged if no diff is found
+    (e.g. bglog appends arrows inside an existing group rather than as new
+    top-level elements).
+    """
+    SVG_NS = "http://www.w3.org/2000/svg"
+    ET.register_namespace("", SVG_NS)
+
+    try:
+        base_root = ET.fromstring(base_svg_bytes)
+        arrow_root = ET.fromstring(arrow_svg_bytes)
+    except ET.ParseError as exc:
+        logger.warning("SVG parse error during overlay diff (%s); using full SVG", exc)
+        return arrow_svg_bytes
+
+    base_serialized = {ET.tostring(c) for c in base_root}
+    new_elements = [c for c in arrow_root if ET.tostring(c) not in base_serialized]
+
+    if not new_elements:
+        logger.debug("SVG diff found no new top-level elements; falling back to full SVG")
+        return arrow_svg_bytes
+
+    overlay_root = ET.Element(f"{{{SVG_NS}}}svg")
+    for attr, val in arrow_root.attrib.items():
+        overlay_root.set(attr, val)
+    for elem in new_elements:
+        overlay_root.append(elem)
+
+    header = b'<?xml version="1.0" encoding="utf-8"?>\n'
+    return header + ET.tostring(overlay_root, encoding="unicode").encode("utf-8")
 
 
 def start_http_server(directory: Path):
@@ -151,6 +191,14 @@ def xgid2svg(boards, bglog_path, theme):
             # Iniatilize with the assumption that the player on turn is on the bottom
             current_orientation = 1
 
+            # Cache bare-board SVG bytes keyed by XGID so arrow variants can be
+            # diffed against them to produce small overlay-only SVG files.
+            base_svg_cache: dict[str, bytes] = {}
+
+            # Create output folder once before the loop
+            out_dir = folder / "board-images"
+            out_dir.mkdir(exist_ok=True)
+
             for board in tqdm(boards, desc="Generating board images"):
                 xgid = board[0]
 
@@ -204,26 +252,22 @@ def xgid2svg(boards, bglog_path, theme):
                     }"""
                 )
 
-                # Create output folder
-                out_dir = folder / "board-images"
-                out_dir.mkdir(exist_ok=True)
-
                 svg_bytes = base64.b64decode(b64)
+                xgid_part = sanitize_filename(xgid)
+
                 if arrows:
-                    # Build the *same* basename in both places:
-                    xgid_part = sanitize_filename(xgid)
                     move_part = sanitize_filename(board[1].replace(" ", "m"))
                     basename = f"{xgid_part}_{move_part}.svg"
                     out_path = out_dir / basename
-                    # out_path = out_dir / (sanitize_filename(xgid+'-'+"_".join(arrow_list)) + ".svg")
+                    base = base_svg_cache.get(xgid)
+                    out_path.write_bytes(
+                        create_arrow_overlay(base, svg_bytes) if base else svg_bytes
+                    )
                 else:
-                    xgid_part = sanitize_filename(xgid)
                     basename = f"{xgid_part}.svg"
                     out_path = out_dir / basename
-                    # out_path = out_dir / (sanitize_filename(xgid) + ".svg")
-
-                # Save svg
-                out_path.write_bytes(svg_bytes)
+                    out_path.write_bytes(svg_bytes)
+                    base_svg_cache[xgid] = svg_bytes
 
             ctx.close()
             browser.close()

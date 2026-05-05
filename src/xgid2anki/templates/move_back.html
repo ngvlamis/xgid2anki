@@ -329,24 +329,28 @@
           })
           .join("");
 
-        // --- iOS-robust board swap (uses <template>.content when available) ---
+        // --- Board swap: overlay arrows-only SVG on top of base board ---
         const originalHTML = box ? box.innerHTML : "";
-        function injectFromTemplate(tpl) {
-          if (tpl && tpl.content && tpl.content.firstElementChild) {
-            const node = tpl.content.firstElementChild.cloneNode(true);
-            box.replaceChildren(node);
-            return true;
+        function getArrowEl(tpl) {
+          if (!tpl) return null;
+          if (tpl.content && tpl.content.firstElementChild)
+            return tpl.content.firstElementChild.cloneNode(true);
+          if (tpl.innerHTML && tpl.innerHTML.trim()) {
+            const d = document.createElement("div");
+            d.innerHTML = tpl.innerHTML;
+            return d.firstElementChild;
           }
-          if (tpl && tpl.innerHTML && tpl.innerHTML.trim()) {
-            box.innerHTML = tpl.innerHTML;
-            return true;
-          }
-          return false;
+          return null;
         }
         function setBoardToIdx(idx) {
           if (!box) return;
-          const tpl = document.getElementById(`svg-move-${idx}`);
-          if (!injectFromTemplate(tpl)) box.innerHTML = originalHTML;
+          box.innerHTML = originalHTML;
+          box.classList.remove("has-overlay");
+          const arrowEl = getArrowEl(document.getElementById(`svg-move-${idx}`));
+          if (arrowEl) {
+            box.appendChild(arrowEl);
+            box.classList.add("has-overlay");
+          }
           requestAnimationFrame(() =>
             window.dispatchEvent(new Event("resize")),
           );

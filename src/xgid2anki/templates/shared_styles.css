@@ -136,6 +136,14 @@ hr {
   height: auto;
 }
 
+/* Arrow overlay: stack base board + arrows-only SVG in the same grid cell */
+.imgwrap.has-overlay {
+  display: grid;
+}
+.imgwrap.has-overlay img {
+  grid-area: 1 / 1;
+}
+
 /* Dark-mode board tweak */
 body.nightMode .imgwrap img,
 body.nightMode .imgwrap svg {
