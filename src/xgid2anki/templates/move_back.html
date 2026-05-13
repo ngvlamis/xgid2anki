@@ -457,19 +457,12 @@
         }
 
         if (btn) {
-          btn.addEventListener("click", async () => {
+          btn.addEventListener("click", () => {
             if (!input) return;
             input.focus();
             input.select();
             let ok = false;
-            try {
-              if (navigator.clipboard && navigator.clipboard.writeText) {
-                await navigator.clipboard.writeText(input.value);
-                ok = true;
-              } else {
-                ok = document.execCommand("copy");
-              }
-            } catch (_) {}
+            try { ok = document.execCommand("copy"); } catch (_) {}
             feedback(ok ? "Copied!" : "Press Ctrl/Cmd+C");
           });
         }

@@ -140,7 +140,8 @@ hr {
 .imgwrap.has-overlay {
   display: grid;
 }
-.imgwrap.has-overlay img {
+.imgwrap.has-overlay img,
+.imgwrap.has-overlay svg {
   grid-area: 1 / 1;
 }
 
