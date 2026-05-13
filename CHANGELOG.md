@@ -1,6 +1,14 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2026-05-12
+### Changed
+- Move-type cards now store arrow moves as lightweight SVG overlays (~3 elements) rather than full board re-renders (~24 KB each), significantly reducing `.apkg` file size. Card templates use CSS grid stacking to layer the overlay on top of the base board image. Falls back to a full SVG if the diff yields no new elements.
+
+### Fixed
+- Arrow overlay SVG was missing `grid-area: 1/1`, causing it to render below the board and obscure the copy button.
+- Copy button in `move_back` and `takepass_back` used an async click handler that broke `execCommand("copy")`'s user-gesture requirement in Anki's webview; replaced with a synchronous handler matching `cube_back`.
+
 ## [0.1.9] - 2026-04-25
 ### Changed
 - bglog now supports away-style scores natively; removed JS patching from `download_bglog.py` and updated default theme to use `scoreStyle: awayalpha`
